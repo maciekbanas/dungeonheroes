@@ -1,9 +1,11 @@
 library(shinyphaser)
+library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
 
 ui <- shiny::tagList(
-  game$ui()
+  game$ui(),
+  shinyalert::useShinyalert()
 )
 
 server <- function(input, output, session) {
@@ -186,7 +188,11 @@ server <- function(input, output, session) {
 }
 
 show_wizard_window <- function(game, input) {
-  print("Hello wizard!")
+  shinyalert::shinyalert(
+    title = "Greetings from the Wizard",
+    text = "Welcome, brave hero! The wizard sends you wise greetings and wishes you strength for your quest.",
+    type = "info"
+  )
 }
 
 shiny::shinyApp(ui, server)
