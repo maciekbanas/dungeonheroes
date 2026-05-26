@@ -81,6 +81,7 @@ server <- function(input, output, session) {
         if (skeleton_hit_points <= 0) {
           skeleton_is_alive <<- FALSE
           skeleton$destroy()
+          skeleton_in_range <<- FALSE
         }
       }
       if (wizard_in_range) {
