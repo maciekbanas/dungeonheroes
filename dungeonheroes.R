@@ -17,6 +17,9 @@ server <- function(input, output, session) {
   skeleton_is_alive <- TRUE
   skeleton_last_attack_time <- as.numeric(Sys.time())
   skeleton_attack_cooldown <- 0.6
+  skeleton_in_range <- FALSE
+  wizard_in_range <- FALSE
+  game_over_shown <- FALSE
   wizard_is_talking <- FALSE
 
   game$set_shiny_session()
@@ -73,25 +76,15 @@ server <- function(input, output, session) {
   game$add_control(
     "Space",
     action = function() {
-      hero$play_animation("hero_attack", duration = 1e3)
-      are_overlap_skeleton <- game$are_overlap(
-        object_one_name = "hero",
-        object_two_name = "skeleton",
-        input = input
-      )
-      are_overlap_wizard <- game$are_overlap(
-        object_one_name = "hero",
-        object_two_name = "wizard",
-        input = input
-      )
-      if (are_overlap_skeleton() && skeleton_is_alive) {
+      hero$play_animation("hero_attack", duration = 200)
+      if (skeleton_in_range && skeleton_is_alive) {
         skeleton_hit_points <<- skeleton_hit_points - 1
         if (skeleton_hit_points <= 0) {
           skeleton_is_alive <<- FALSE
           skeleton$destroy()
         }
       }
-      if (are_overlap_wizard()) {
+      if (wizard_in_range) {
         show_wizard_window(game, input)
       }
     },
@@ -155,6 +148,7 @@ server <- function(input, output, session) {
     object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$show()
+      wizard_in_range <<- TRUE
       if (!wizard_is_talking) {
         wizard_is_talking <<- TRUE
         wizard$play_animation("wizard_talk", 2e3)
@@ -167,6 +161,7 @@ server <- function(input, output, session) {
     object_two_name = "wizard",
     callback_fun = function(evt) {
       talk_btn$hide()
+      wizard_in_range <<- FALSE
       wizard_is_talking <<- FALSE
       wizard$play_animation("wizard_idle")
     },
@@ -177,6 +172,7 @@ server <- function(input, output, session) {
     object_name = "hero",
     object_two = "skeleton",
     callback_fun = function(evt) {
+      skeleton_in_range <<- TRUE
       if (!skeleton_is_alive) {
         return()
       }
@@ -185,7 +181,15 @@ server <- function(input, output, session) {
       if ((current_time - skeleton_last_attack_time) >= skeleton_attack_cooldown) {
         skeleton_last_attack_time <<- current_time
         life_points <<- max(life_points - 10, 0)
-        life_points_text$set_text(sprintf("life: %d/100", life_points))
+        life_points_text$set(sprintf("life: %d/100", life_points))
+        if (life_points <= 0 && !game_over_shown) {
+          game_over_shown <<- TRUE
+          shinyalert::shinyalert(
+            title = "Game Over",
+            text = "The skeleton has defeated you.",
+            type = "error"
+          )
+        }
       }
       skeleton$play_animation("skeleton_attack")
     },
@@ -195,6 +199,7 @@ server <- function(input, output, session) {
     object_one = "hero",
     object_two = "skeleton",
     callback_fun = function(evt) {
+      skeleton_in_range <<- FALSE
       if (skeleton_is_alive) {
         skeleton$play_animation("skeleton_idle")
       }
