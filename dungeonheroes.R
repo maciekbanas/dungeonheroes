@@ -15,8 +15,8 @@ server <- function(input, output, session) {
   life_points <- 100
   skeleton_hit_points <- 2
   skeleton_is_alive <- TRUE
-  skeleton_last_attack_time <- as.numeric(Sys.time())
-  skeleton_attack_cooldown <- 0.6
+  skeleton_last_attack_time <- as.numeric(Sys.time()) - 2
+  skeleton_attack_cooldown <- 2
   skeleton_in_range <- FALSE
   wizard_in_range <- FALSE
   game_over_shown <- FALSE
@@ -180,6 +180,7 @@ server <- function(input, output, session) {
       current_time <- as.numeric(Sys.time())
       if ((current_time - skeleton_last_attack_time) >= skeleton_attack_cooldown) {
         skeleton_last_attack_time <<- current_time
+        skeleton$play_animation("skeleton_attack", duration = 350)
         life_points <<- max(life_points - 10, 0)
         life_points_text$set(sprintf("life: %d/100", life_points))
         if (life_points <= 0 && !game_over_shown) {
@@ -190,8 +191,9 @@ server <- function(input, output, session) {
             type = "error"
           )
         }
+      } else {
+        skeleton$play_animation("skeleton_idle")
       }
-      skeleton$play_animation("skeleton_attack")
     },
     input = input
   )
