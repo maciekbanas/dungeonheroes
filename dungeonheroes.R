@@ -77,7 +77,12 @@ server <- function(input, output, session) {
     "Space",
     action = function() {
       hero$play_animation("hero_attack", duration = 200)
-      if (skeleton_in_range && skeleton_is_alive) {
+      are_overlap_skeleton <- game$are_overlap(
+        object_one_name = "hero",
+        object_two_name = "skeleton",
+        input = input
+      )
+      if (are_overlap_skeleton() && skeleton_is_alive) {
         skeleton_hit_points <<- skeleton_hit_points - 1
         if (skeleton_hit_points <= 0) {
           skeleton_is_alive <<- FALSE
@@ -191,8 +196,6 @@ server <- function(input, output, session) {
             type = "error"
           )
         }
-      } else {
-        skeleton$play_animation("skeleton_idle")
       }
     },
     input = input
