@@ -82,7 +82,7 @@ server <- function(input, output, session) {
         object_two_name = "skeleton",
         input = input
       )
-      if (are_overlap_skeleton() && skeleton_is_alive) {
+      if (isTRUE(are_overlap_skeleton) && skeleton_is_alive) {
         skeleton_hit_points <<- skeleton_hit_points - 1
         if (skeleton_hit_points <= 0) {
           skeleton_is_alive <<- FALSE
