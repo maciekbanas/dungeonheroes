@@ -13,6 +13,10 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
   
   life_points <- 100
+  skeleton_hit_points <- 2
+  skeleton_is_alive <- TRUE
+  skeleton_last_attack_time <- as.numeric(Sys.time())
+  skeleton_attack_cooldown <- 0.6
   wizard_is_talking <- FALSE
 
   game$set_shiny_session()
@@ -80,8 +84,12 @@ server <- function(input, output, session) {
         object_two_name = "wizard",
         input = input
       )
-      if (are_overlap_skeleton()) {
-        skeleton$destroy()
+      if (are_overlap_skeleton() && skeleton_is_alive) {
+        skeleton_hit_points <<- skeleton_hit_points - 1
+        if (skeleton_hit_points <= 0) {
+          skeleton_is_alive <<- FALSE
+          skeleton$destroy()
+        }
       }
       if (are_overlap_wizard()) {
         show_wizard_window(game, input)
@@ -169,7 +177,16 @@ server <- function(input, output, session) {
     object_name = "hero",
     object_two = "skeleton",
     callback_fun = function(evt) {
-      print("Skeleton attacks you!")
+      if (!skeleton_is_alive) {
+        return()
+      }
+
+      current_time <- as.numeric(Sys.time())
+      if ((current_time - skeleton_last_attack_time) >= skeleton_attack_cooldown) {
+        skeleton_last_attack_time <<- current_time
+        life_points <<- max(life_points - 10, 0)
+        life_points_text$set_text(sprintf("life: %d/100", life_points))
+      }
       skeleton$play_animation("skeleton_attack")
     },
     input = input
@@ -178,8 +195,9 @@ server <- function(input, output, session) {
     object_one = "hero",
     object_two = "skeleton",
     callback_fun = function(evt) {
-      print("Skeleton stops.")
-      skeleton$play_animation("skeleton_idle")
+      if (skeleton_is_alive) {
+        skeleton$play_animation("skeleton_idle")
+      }
     },
     input = input
   )
