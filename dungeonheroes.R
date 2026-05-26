@@ -13,6 +13,7 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
   
   life_points <- 100
+  wizard_is_talking <- FALSE
 
   game$set_shiny_session()
 
@@ -146,7 +147,10 @@ server <- function(input, output, session) {
     object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$show()
-      wizard$play_animation("wizard_talk", 2e3)
+      if (!wizard_is_talking) {
+        wizard_is_talking <<- TRUE
+        wizard$play_animation("wizard_talk", 2e3)
+      }
     },
     input = input
   )
@@ -155,6 +159,7 @@ server <- function(input, output, session) {
     object_two_name = "wizard",
     callback_fun = function(evt) {
       talk_btn$hide()
+      wizard_is_talking <<- FALSE
       wizard$play_animation("wizard_idle")
     },
     input = input
