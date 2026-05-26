@@ -4,8 +4,7 @@ library(shinyalert)
 game <- PhaserGame$new(width = 1600, height = 800)
 
 ui <- shiny::tagList(
-  game$ui(),
-  shinyalert::useShinyalert()
+  game$ui()
 )
 
 server <- function(input, output, session) {
@@ -76,13 +75,8 @@ server <- function(input, output, session) {
   game$add_control(
     "Space",
     action = function() {
-      hero$play_animation("hero_attack", duration = 200)
-      are_overlap_skeleton <- game$are_overlap(
-        object_one_name = "hero",
-        object_two_name = "skeleton",
-        input = input
-      )
-      if (isTRUE(are_overlap_skeleton) && skeleton_is_alive) {
+      hero$play_animation("hero_attack", duration = 500)
+      if (skeleton_in_range && skeleton_is_alive) {
         skeleton_hit_points <<- skeleton_hit_points - 1
         if (skeleton_hit_points <= 0) {
           skeleton_is_alive <<- FALSE
