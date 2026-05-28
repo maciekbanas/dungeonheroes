@@ -10,16 +10,30 @@ ui <- shiny::tagList(
 server <- function(input, output, session) {
 
   shiny::addResourcePath("assets", "assets")
-  
+
+  skeleton_specs <- list(
+    list(name = "skeleton", x = 700, y = 500),
+    list(name = "skeleton_2", x = 900, y = 450),
+    list(name = "skeleton_3", x = 1100, y = 550)
+  )
+  skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
+
   life_points <- 100
-  skeleton_hit_points <- 2
-  skeleton_is_alive <- TRUE
-  skeleton_last_attack_time <- as.numeric(Sys.time()) - 2
+  skeleton_hit_points <- stats::setNames(rep(2, length(skeleton_names)), skeleton_names)
+  skeleton_is_alive <- stats::setNames(rep(TRUE, length(skeleton_names)), skeleton_names)
+  skeleton_last_attack_time <- stats::setNames(
+    rep(as.numeric(Sys.time()) - 2, length(skeleton_names)),
+    skeleton_names
+  )
   skeleton_attack_cooldown <- 2
-  skeleton_in_range <- FALSE
+  skeleton_in_range <- NULL
   wizard_in_range <- FALSE
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
+
+  skeleton_animation_key <- function(skeleton_name, suffix) {
+    paste(skeleton_name, suffix, sep = "_")
+  }
 
   game$set_shiny_session()
 
@@ -72,16 +86,39 @@ server <- function(input, output, session) {
     frame_count = 2, frame_rate = 4
   )
 
+  skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
+    skel <- game$add_sprite(
+      name = spec$name,
+      url = "assets/sprites/skeleton_idle.png",
+      x = spec$x,
+      y = spec$y,
+      frame_width = 100,
+      frame_height = 100,
+      frame_count = 8,
+      frame_rate = 4
+    )
+
+    skel$add_animation(
+      suffix = "attack",
+      url = "assets/sprites/skeleton_attack.png",
+      frame_width = 100, frame_height = 100,
+      frame_count = 2, frame_rate = 4
+    )
+
+    skel
+  }), skeleton_names)
+
   game$add_control(
     "Space",
     action = function() {
       hero$play_animation("hero_attack", duration = 500)
-      if (skeleton_in_range && skeleton_is_alive) {
-        skeleton_hit_points <<- skeleton_hit_points - 1
-        if (skeleton_hit_points <= 0) {
-          skeleton_is_alive <<- FALSE
-          skeleton$destroy()
-          skeleton_in_range <<- FALSE
+      if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
+        target_name <- skeleton_in_range
+        skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
+        if (skeleton_hit_points[[target_name]] <= 0) {
+          skeleton_is_alive[target_name] <<- FALSE
+          skeletons[[target_name]]$destroy()
+          skeleton_in_range <<- NULL
         }
       }
       if (wizard_in_range) {
@@ -111,24 +148,6 @@ server <- function(input, output, session) {
   wizard$add_animation(
     suffix = "talk",
     url = "assets/sprites/wizard_talk.png",
-    frame_width = 100, frame_height = 100,
-    frame_count = 2, frame_rate = 4
-  )
-
-  skeleton <- game$add_sprite(
-    name = "skeleton",
-    url = "assets/sprites/skeleton_idle.png",
-    x = 700,
-    y = 500,
-    frame_width = 100,
-    frame_height = 100,
-    frame_count = 8,
-    frame_rate = 4
-  )
-
-  skeleton$add_animation(
-    suffix = "attack",
-    url = "assets/sprites/skeleton_attack.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
@@ -168,44 +187,56 @@ server <- function(input, output, session) {
     input = input
   )
 
-  game$add_overlap(
-    object_name = "hero",
-    object_two = "skeleton",
-    callback_fun = function(evt) {
-      skeleton_in_range <<- TRUE
-      if (!skeleton_is_alive) {
-        return()
-      }
+  add_skeleton_handlers <- function(skeleton_name) {
+    force(skeleton_name)
 
-      current_time <- as.numeric(Sys.time())
-      if ((current_time - skeleton_last_attack_time) >= skeleton_attack_cooldown) {
-        skeleton_last_attack_time <<- current_time
-        skeleton$play_animation("skeleton_attack", duration = 350)
-        life_points <<- max(life_points - 10, 0)
-        life_points_text$set(sprintf("life: %d/100", life_points))
-        if (life_points <= 0 && !game_over_shown) {
-          game_over_shown <<- TRUE
-          shinyalert::shinyalert(
-            title = "Game Over",
-            text = "The skeleton has defeated you.",
-            type = "error"
-          )
+    game$add_overlap(
+      object_name = "hero",
+      object_two = skeleton_name,
+      callback_fun = function(evt) {
+        skeleton_in_range <<- skeleton_name
+        if (!isTRUE(skeleton_is_alive[[skeleton_name]])) {
+          return()
         }
-      }
-    },
-    input = input
-  )
-  game$add_overlap_end(
-    object_one = "hero",
-    object_two = "skeleton",
-    callback_fun = function(evt) {
-      skeleton_in_range <<- FALSE
-      if (skeleton_is_alive) {
-        skeleton$play_animation("skeleton_idle")
-      }
-    },
-    input = input
-  )
+
+        current_time <- as.numeric(Sys.time())
+        if ((current_time - skeleton_last_attack_time[[skeleton_name]]) >= skeleton_attack_cooldown) {
+          skeleton_last_attack_time[skeleton_name] <<- current_time
+          skeletons[[skeleton_name]]$play_animation(
+            skeleton_animation_key(skeleton_name, "attack"),
+            duration = 350
+          )
+          life_points <<- max(life_points - 10, 0)
+          life_points_text$set(sprintf("life: %d/100", life_points))
+          if (life_points <= 0 && !game_over_shown) {
+            game_over_shown <<- TRUE
+            shinyalert::shinyalert(
+              title = "Game Over",
+              text = "The skeletons have defeated you.",
+              type = "error"
+            )
+          }
+        }
+      },
+      input = input
+    )
+
+    game$add_overlap_end(
+      object_one = "hero",
+      object_two = skeleton_name,
+      callback_fun = function(evt) {
+        if (identical(skeleton_in_range, skeleton_name)) {
+          skeleton_in_range <<- NULL
+        }
+        if (isTRUE(skeleton_is_alive[[skeleton_name]])) {
+          skeletons[[skeleton_name]]$play_animation(skeleton_animation_key(skeleton_name, "idle"))
+        }
+      },
+      input = input
+    )
+  }
+
+  lapply(skeleton_names, add_skeleton_handlers)
 
   talk_btn$click(
     event_fun = function(evt) {
