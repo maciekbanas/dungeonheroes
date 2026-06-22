@@ -13,8 +13,7 @@ server <- function(input, output, session) {
 
   skeleton_specs <- list(
     list(name = "skeleton", x = 350, y = 280),
-    list(name = "skeleton_2", x = 470, y = 380),
-    list(name = "skeleton_3", x = 590, y = 300)
+    list(name = "skeleton_2", x = 470, y = 380)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -28,6 +27,8 @@ server <- function(input, output, session) {
   skeleton_attack_cooldown <- 2
   skeleton_in_range <- NULL
   wizard_in_range <- FALSE
+  sword_in_range <- FALSE
+  has_sword <- FALSE
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
 
@@ -136,8 +137,14 @@ server <- function(input, output, session) {
           skeleton_in_range <<- NULL
         }
       }
+      if (sword_in_range && !has_sword) {
+        has_sword <<- TRUE
+        sword_in_range <<- FALSE
+        sword_placeholder$set("sword: equipped")
+        inventory_text$set("weapon: sword")
+      }
       if (wizard_in_range) {
-        show_wizard_window(game, input)
+        show_wizard_window(game, input, has_sword)
       }
     },
     input
@@ -148,6 +155,37 @@ server <- function(input, output, session) {
     id = "life_points",
     x = 1200,
     y = 50
+  )
+  inventory_text <- game$add_text(
+    text = "weapon: none",
+    id = "inventory_weapon",
+    x = 1200,
+    y = 85
+  )
+
+  sword_placeholder <- game$add_text(
+    text = "sword: placeholder",
+    id = "sword_placeholder",
+    x = 760,
+    y = 500
+  )
+  game$add_overlap(
+    object_one = "hero",
+    object_two = "sword_placeholder",
+    callback_fun = function(evt) {
+      if (!has_sword) {
+        sword_in_range <<- TRUE
+      }
+    },
+    input = input
+  )
+  game$add_overlap_end(
+    object_one = "hero",
+    object_two = "sword_placeholder",
+    callback_fun = function(evt) {
+      sword_in_range <<- FALSE
+    },
+    input = input
   )
 
   wizard <- game$add_sprite(
@@ -251,10 +289,16 @@ server <- function(input, output, session) {
   lapply(skeleton_names, add_skeleton_handlers)
 }
 
-show_wizard_window <- function(game, input) {
+show_wizard_window <- function(game, input, has_sword = FALSE) {
+  greeting <- if (has_sword) {
+    "You found the sword. The wizard believes you are ready for the next challenge."
+  } else {
+    "Welcome, brave hero! Find the sword before facing the deepest dungeon challenge."
+  }
+
   shinyalert::shinyalert(
     title = "Greetings from the Wizard",
-    text = "Welcome, brave hero! The wizard sends you wise greetings and wishes you strength for your quest.",
+    text = greeting,
     type = "info"
   )
 }
