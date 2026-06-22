@@ -12,9 +12,9 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 700, y = 500),
-    list(name = "skeleton_2", x = 900, y = 450),
-    list(name = "skeleton_3", x = 1100, y = 550)
+    list(name = "skeleton", x = 350, y = 280),
+    list(name = "skeleton_2", x = 470, y = 380),
+    list(name = "skeleton_3", x = 590, y = 300)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -30,6 +30,21 @@ server <- function(input, output, session) {
   wizard_in_range <- FALSE
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
+
+  show_intro_alerts <- function() {
+    shinyalert::shinyalert(
+      title = "Welcome to the game, dungeon hero!",
+      type = "success",
+      callbackR = function(value) {
+        shinyalert::shinyalert(
+          title = "Use arrows to move and space to attack or interact",
+          type = "info"
+        )
+      }
+    )
+  }
+
+  session$onFlushed(show_intro_alerts, once = TRUE)
 
   skeleton_animation_key <- function(skeleton_name, suffix) {
     paste(skeleton_name, suffix, sep = "_")
@@ -138,8 +153,8 @@ server <- function(input, output, session) {
   wizard <- game$add_sprite(
     name = "wizard",
     url = "assets/sprites/wizard_idle.png",
-    x = 500,
-    y = 300,
+    x = 1000,
+    y = 500,
     frame_width = 100,
     frame_height = 100,
     frame_count = 17,
@@ -152,21 +167,18 @@ server <- function(input, output, session) {
     frame_count = 2, frame_rate = 4
   )
 
-  talk_btn <- game$add_rectangle(
-    name = "talk_btn",
-    y = 600,
-    x = 600,
-    width = 100,
-    height = 40,
-    color = '0xffffff',
-    visible = FALSE,
-    clickable = TRUE
+  talk_bubble_text <- game$add_text(
+    text = "...",
+    id = "talk_bubble_text",
+    x = 1000,
+    y = 393,
+    visible = FALSE
   )
   game$add_overlap(
     object_one = "hero",
     object_two = "wizard",
     callback_fun = function(evt) {
-      talk_btn$show()
+      talk_bubble_text$show()
       wizard_in_range <<- TRUE
       if (!wizard_is_talking) {
         wizard_is_talking <<- TRUE
@@ -179,7 +191,7 @@ server <- function(input, output, session) {
     object_one = "hero",
     object_two = "wizard",
     callback_fun = function(evt) {
-      talk_btn$hide()
+      talk_bubble_text$hide()
       wizard_in_range <<- FALSE
       wizard_is_talking <<- FALSE
       wizard$play_animation("wizard_idle")
@@ -237,13 +249,6 @@ server <- function(input, output, session) {
   }
 
   lapply(skeleton_names, add_skeleton_handlers)
-
-  talk_btn$click(
-    event_fun = function(evt) {
-      show_wizard_window(game, input)
-    },
-    input = input
-  )
 }
 
 show_wizard_window <- function(game, input) {
