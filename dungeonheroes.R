@@ -4,7 +4,7 @@ library(shinyalert)
 game <- PhaserGame$new(width = 1600, height = 800)
 
 ui <- shiny::tagList(
-  game$ui()
+  game$use_phaser()
 )
 
 server <- function(input, output, session) {
@@ -163,7 +163,7 @@ server <- function(input, output, session) {
     clickable = TRUE
   )
   game$add_overlap(
-    object_name = "hero",
+    object_one = "hero",
     object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$show()
@@ -176,8 +176,8 @@ server <- function(input, output, session) {
     input = input
   )
   game$add_overlap_end(
-    object_one_name = "hero",
-    object_two_name = "wizard",
+    object_one = "hero",
+    object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$hide()
       wizard_in_range <<- FALSE
@@ -191,7 +191,7 @@ server <- function(input, output, session) {
     force(skeleton_name)
 
     game$add_overlap(
-      object_name = "hero",
+      object_one = "hero",
       object_two = skeleton_name,
       callback_fun = function(evt) {
         skeleton_in_range <<- skeleton_name
