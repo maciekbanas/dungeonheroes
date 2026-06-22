@@ -4,6 +4,7 @@ library(shinyalert)
 game <- PhaserGame$new(width = 1600, height = 800)
 
 ui <- shiny::tagList(
+  shinyalert::useShinyalert(),
   game$use_phaser()
 )
 
@@ -12,9 +13,9 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 700, y = 500),
-    list(name = "skeleton_2", x = 900, y = 450),
-    list(name = "skeleton_3", x = 1100, y = 550)
+    list(name = "skeleton", x = 350, y = 280),
+    list(name = "skeleton_2", x = 470, y = 380),
+    list(name = "skeleton_3", x = 590, y = 300)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -30,6 +31,21 @@ server <- function(input, output, session) {
   wizard_in_range <- FALSE
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
+
+  show_intro_alerts <- function() {
+    shinyalert::shinyalert(
+      title = "Welcome to the game, dungeon hero!",
+      type = "success",
+      callbackR = function(value) {
+        shinyalert::shinyalert(
+          title = "Use arrows to move and space to attack",
+          type = "info"
+        )
+      }
+    )
+  }
+
+  session$onFlushed(show_intro_alerts, once = TRUE)
 
   skeleton_animation_key <- function(skeleton_name, suffix) {
     paste(skeleton_name, suffix, sep = "_")
@@ -154,19 +170,37 @@ server <- function(input, output, session) {
 
   talk_btn <- game$add_rectangle(
     name = "talk_btn",
-    y = 600,
-    x = 600,
-    width = 100,
-    height = 40,
+    y = 210,
+    x = 500,
+    width = 90,
+    height = 50,
     color = '0xffffff',
     visible = FALSE,
     clickable = TRUE
+  )
+  talk_bubble_tail <- game$add_rectangle(
+    name = "talk_bubble_tail",
+    y = 245,
+    x = 500,
+    width = 24,
+    height = 24,
+    color = '0xffffff',
+    visible = FALSE
+  )
+  talk_bubble_text <- game$add_text(
+    text = "...",
+    id = "talk_bubble_text",
+    x = 485,
+    y = 193,
+    visible = FALSE
   )
   game$add_overlap(
     object_one = "hero",
     object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$show()
+      talk_bubble_tail$show()
+      talk_bubble_text$show()
       wizard_in_range <<- TRUE
       if (!wizard_is_talking) {
         wizard_is_talking <<- TRUE
@@ -180,6 +214,8 @@ server <- function(input, output, session) {
     object_two = "wizard",
     callback_fun = function(evt) {
       talk_btn$hide()
+      talk_bubble_tail$hide()
+      talk_bubble_text$hide()
       wizard_in_range <<- FALSE
       wizard_is_talking <<- FALSE
       wizard$play_animation("wizard_idle")
