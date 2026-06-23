@@ -2,6 +2,7 @@ library(shinyphaser)
 library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
+shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 ui <- shiny::tagList(
   game$use_phaser()
@@ -161,6 +162,12 @@ server <- function(input, output, session) {
     id = "inventory_weapon",
     x = 1200,
     y = 85
+  )
+  game$add_text(
+    text = sprintf("shinyphaser v%s", shinyphaser_version),
+    id = "shinyphaser_version",
+    x = 1375,
+    y = 760
   )
 
   sword <- game$add_static_sprite(
