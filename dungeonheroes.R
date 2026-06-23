@@ -12,8 +12,8 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 350, y = 280),
-    list(name = "skeleton_2", x = 470, y = 380)
+    list(name = "skeleton", x = 750, y = 480),
+    list(name = "skeleton_2", x = 870, y = 580)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -140,7 +140,7 @@ server <- function(input, output, session) {
       if (sword_in_range && !has_sword) {
         has_sword <<- TRUE
         sword_in_range <<- FALSE
-        sword_placeholder$set("sword: equipped")
+        sword$destroy()
         inventory_text$set("weapon: sword")
       }
       if (wizard_in_range) {
@@ -163,15 +163,15 @@ server <- function(input, output, session) {
     y = 85
   )
 
-  sword_placeholder <- game$add_text(
-    text = "sword: placeholder",
-    id = "sword_placeholder",
-    x = 760,
-    y = 500
+  sword <- game$add_static_sprite(
+    name = "sword",
+    url = "assets/weapons/sword.png",
+    x = 300,
+    y = 300
   )
   game$add_overlap(
     object_one = "hero",
-    object_two = "sword_placeholder",
+    object_two = "sword",
     callback_fun = function(evt) {
       if (!has_sword) {
         sword_in_range <<- TRUE
@@ -181,7 +181,7 @@ server <- function(input, output, session) {
   )
   game$add_overlap_end(
     object_one = "hero",
-    object_two = "sword_placeholder",
+    object_two = "sword",
     callback_fun = function(evt) {
       sword_in_range <<- FALSE
     },
@@ -191,8 +191,8 @@ server <- function(input, output, session) {
   wizard <- game$add_sprite(
     name = "wizard",
     url = "assets/sprites/wizard_idle.png",
-    x = 1000,
-    y = 500,
+    x = 1200,
+    y = 300,
     frame_width = 100,
     frame_height = 100,
     frame_count = 17,
@@ -208,8 +208,8 @@ server <- function(input, output, session) {
   talk_bubble_text <- game$add_text(
     text = "...",
     id = "talk_bubble_text",
-    x = 1000,
-    y = 393,
+    x = 1200,
+    y = 193,
     visible = FALSE
   )
   game$add_overlap(
@@ -262,7 +262,7 @@ server <- function(input, output, session) {
             game_over_shown <<- TRUE
             shinyalert::shinyalert(
               title = "Game Over",
-              text = "The skeletons have defeated you.",
+              text = "You have been defeated.",
               type = "error"
             )
           }
