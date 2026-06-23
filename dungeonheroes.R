@@ -12,9 +12,8 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 350, y = 280),
-    list(name = "skeleton_2", x = 470, y = 380),
-    list(name = "skeleton_3", x = 590, y = 300)
+    list(name = "skeleton", x = 750, y = 480),
+    list(name = "skeleton_2", x = 870, y = 580)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -28,6 +27,8 @@ server <- function(input, output, session) {
   skeleton_attack_cooldown <- 2
   skeleton_in_range <- NULL
   wizard_in_range <- FALSE
+  sword_in_range <- FALSE
+  has_sword <- FALSE
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
 
@@ -136,8 +137,14 @@ server <- function(input, output, session) {
           skeleton_in_range <<- NULL
         }
       }
+      if (sword_in_range && !has_sword) {
+        has_sword <<- TRUE
+        sword_in_range <<- FALSE
+        sword$destroy()
+        inventory_text$set("weapon: sword")
+      }
       if (wizard_in_range) {
-        show_wizard_window(game, input)
+        show_wizard_window(game, input, has_sword)
       }
     },
     input
@@ -149,12 +156,43 @@ server <- function(input, output, session) {
     x = 1200,
     y = 50
   )
+  inventory_text <- game$add_text(
+    text = "weapon: none",
+    id = "inventory_weapon",
+    x = 1200,
+    y = 85
+  )
+
+  sword <- game$add_static_sprite(
+    name = "sword",
+    url = "assets/weapons/sword.png",
+    x = 300,
+    y = 300
+  )
+  game$add_overlap(
+    object_one = "hero",
+    object_two = "sword",
+    callback_fun = function(evt) {
+      if (!has_sword) {
+        sword_in_range <<- TRUE
+      }
+    },
+    input = input
+  )
+  game$add_overlap_end(
+    object_one = "hero",
+    object_two = "sword",
+    callback_fun = function(evt) {
+      sword_in_range <<- FALSE
+    },
+    input = input
+  )
 
   wizard <- game$add_sprite(
     name = "wizard",
     url = "assets/sprites/wizard_idle.png",
-    x = 1000,
-    y = 500,
+    x = 1200,
+    y = 300,
     frame_width = 100,
     frame_height = 100,
     frame_count = 17,
@@ -170,8 +208,8 @@ server <- function(input, output, session) {
   talk_bubble_text <- game$add_text(
     text = "...",
     id = "talk_bubble_text",
-    x = 1000,
-    y = 393,
+    x = 1200,
+    y = 193,
     visible = FALSE
   )
   game$add_overlap(
@@ -224,7 +262,7 @@ server <- function(input, output, session) {
             game_over_shown <<- TRUE
             shinyalert::shinyalert(
               title = "Game Over",
-              text = "The skeletons have defeated you.",
+              text = "You have been defeated.",
               type = "error"
             )
           }
@@ -251,10 +289,16 @@ server <- function(input, output, session) {
   lapply(skeleton_names, add_skeleton_handlers)
 }
 
-show_wizard_window <- function(game, input) {
+show_wizard_window <- function(game, input, has_sword = FALSE) {
+  greeting <- if (has_sword) {
+    "You found the sword. The wizard believes you are ready for the next challenge."
+  } else {
+    "Welcome, brave hero! Find the sword before facing the deepest dungeon challenge."
+  }
+
   shinyalert::shinyalert(
     title = "Greetings from the Wizard",
-    text = "Welcome, brave hero! The wizard sends you wise greetings and wishes you strength for your quest.",
+    text = greeting,
     type = "info"
   )
 }
