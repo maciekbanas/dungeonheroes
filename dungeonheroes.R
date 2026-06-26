@@ -103,6 +103,43 @@ server <- function(input, output, session) {
     frame_count = 2, frame_rate = 4
   )
 
+  hero$add_animation(
+    suffix = "sword_idle",
+    url = "assets/sprites/hero_sword_idle.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 7, frame_rate = 4
+  )
+  hero$add_animation(
+    suffix = "sword_move_down",
+    url = "assets/sprites/hero_sword_move_down.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_up",
+    url = "assets/sprites/hero_sword_move_up.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_left",
+    url = "assets/sprites/hero_sword_move_left.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_right",
+    url = "assets/sprites/hero_sword_move_right.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_attack",
+    url = "assets/sprites/hero_sword_attack.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 2, frame_rate = 4
+  )
+
   skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
     skel <- game$add_sprite(
       name = spec$name,
@@ -128,52 +165,27 @@ server <- function(input, output, session) {
   game$add_control(
     "Space",
     action = function() {
-      hero$play_animation("hero_attack", duration = 500)
-      if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
-        target_name <- skeleton_in_range
-        skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
-        if (skeleton_hit_points[[target_name]] <= 0) {
-          skeleton_is_alive[target_name] <<- FALSE
-          skeletons[[target_name]]$destroy()
-          skeleton_in_range <<- NULL
-        }
-      }
       if (sword_in_range && !has_sword) {
         has_sword <<- TRUE
         sword_in_range <<- FALSE
         sword$destroy()
         inventory_text$set("weapon: sword")
-        Sys.sleep(0.1)
-        hero$add_animation(
-          suffix = "idle",
-          url = "assets/sprites/hero_sword_idle.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 7, frame_rate = 4
-        )
-        hero$add_animation(
-          suffix = "move_down",
-          url = "assets/sprites/hero_sword_move_down.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_up",
-          url = "assets/sprites/hero_sword_move_up.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_left",
-          url = "assets/sprites/hero_sword_move_left.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_right",
-          url = "assets/sprites/hero_sword_move_right.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
+        hero$play_animation("hero_sword")
+      } else {
+        if (has_sword) {
+          hero$play_animation("hero_sword_attack", duration = 500)
+        } else {
+          hero$play_animation("hero_attack", duration = 500)
+        }
+        if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
+          target_name <- skeleton_in_range
+          skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
+          if (skeleton_hit_points[[target_name]] <= 0) {
+            skeleton_is_alive[target_name] <<- FALSE
+            skeletons[[target_name]]$destroy()
+            skeleton_in_range <<- NULL
+          }
+        }
       }
       if (wizard_in_range) {
         show_wizard_window(game, input, has_sword)
