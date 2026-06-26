@@ -302,7 +302,7 @@ server <- function(input, output, session) {
     y = 85
   )
   lapply(seq_len(health_bar_segment_count), function(segment_index) {
-    segment_x <- 1340 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
+    segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
     game$add_rectangle(
       name = sprintf("life_bar_red_%02d", segment_index),
       x = segment_x,
@@ -313,7 +313,7 @@ server <- function(input, output, session) {
     )
   })
   health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
-    segment_x <- 1340 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
+    segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
     game$add_rectangle(
       name = sprintf("life_bar_green_%02d", segment_index),
       x = segment_x,
