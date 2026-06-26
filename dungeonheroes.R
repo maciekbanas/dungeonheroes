@@ -133,6 +133,12 @@ server <- function(input, output, session) {
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
+  hero$add_animation(
+    suffix = "sword_attack",
+    url = "assets/sprites/hero_sword_attack.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 2, frame_rate = 4
+  )
 
   skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
     skel <- game$add_sprite(
@@ -167,7 +173,7 @@ server <- function(input, output, session) {
         hero$play_animation("hero_sword")
       } else {
         if (has_sword) {
-          hero$play_animation("hero_sword")
+          hero$play_animation("hero_sword_attack", duration = 500)
         } else {
           hero$play_animation("hero_attack", duration = 500)
         }
