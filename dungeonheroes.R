@@ -103,6 +103,37 @@ server <- function(input, output, session) {
     frame_count = 2, frame_rate = 4
   )
 
+  hero$add_animation(
+    suffix = "sword_idle",
+    url = "assets/sprites/hero_sword_idle.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 7, frame_rate = 4
+  )
+  hero$add_animation(
+    suffix = "sword_move_down",
+    url = "assets/sprites/hero_sword_move_down.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_up",
+    url = "assets/sprites/hero_sword_move_up.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_left",
+    url = "assets/sprites/hero_sword_move_left.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+  hero$add_animation(
+    suffix = "sword_move_right",
+    url = "assets/sprites/hero_sword_move_right.png",
+    frame_width = 100, frame_height = 100,
+    frame_count = 4, frame_rate = 8
+  )
+
   skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
     skel <- game$add_sprite(
       name = spec$name,
@@ -128,7 +159,11 @@ server <- function(input, output, session) {
   game$add_control(
     "Space",
     action = function() {
-      hero$play_animation("hero_attack", duration = 500)
+      if (has_sword) {
+        hero$play_animation("hero_sword")
+      } else {
+        hero$play_animation("hero_attack", duration = 500)
+      }
       if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
         target_name <- skeleton_in_range
         skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
@@ -143,37 +178,7 @@ server <- function(input, output, session) {
         sword_in_range <<- FALSE
         sword$destroy()
         inventory_text$set("weapon: sword")
-        Sys.sleep(0.1)
-        hero$add_animation(
-          suffix = "idle",
-          url = "assets/sprites/hero_sword_idle.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 7, frame_rate = 4
-        )
-        hero$add_animation(
-          suffix = "move_down",
-          url = "assets/sprites/hero_sword_move_down.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_up",
-          url = "assets/sprites/hero_sword_move_up.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_left",
-          url = "assets/sprites/hero_sword_move_left.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
-        hero$add_animation(
-          suffix = "move_right",
-          url = "assets/sprites/hero_sword_move_right.png",
-          frame_width = 100, frame_height = 100,
-          frame_count = 4, frame_rate = 8
-        )
+        hero$play_animation("hero_sword")
       }
       if (wizard_in_range) {
         show_wizard_window(game, input, has_sword)
