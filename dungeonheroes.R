@@ -43,6 +43,10 @@ server <- function(input, output, session) {
   hero_attack_cooldown <- 0.75
   hero_fist_damage <- 1
   hero_sword_damage <- 2
+  health_bar_segment_count <- 10
+  health_bar_segment_width <- 18
+  health_bar_segment_height <- 14
+  health_bar_segment_gap <- 3
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
   defeated_skeleton_count <- 0
@@ -76,6 +80,15 @@ server <- function(input, output, session) {
 
   update_life_points <- function() {
     life_points_text$set(sprintf("life: %d/%d", life_points, max_life_points))
+    visible_segments <- ceiling(life_points / max_life_points * health_bar_segment_count)
+
+    lapply(seq_len(health_bar_segment_count), function(segment_index) {
+      if (segment_index <= visible_segments) {
+        health_bar_segments[[segment_index]]$show()
+      } else {
+        health_bar_segments[[segment_index]]$hide()
+      }
+    })
   }
 
   update_enemy_status <- function() {
@@ -295,6 +308,28 @@ server <- function(input, output, session) {
     x = 1200,
     y = 85
   )
+  lapply(seq_len(health_bar_segment_count), function(segment_index) {
+    segment_x <- 1340 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
+    game$add_rectangle(
+      name = sprintf("life_bar_red_%02d", segment_index),
+      x = segment_x,
+      y = 60,
+      width = health_bar_segment_width,
+      height = health_bar_segment_height,
+      color = "#c0392b"
+    )
+  })
+  health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
+    segment_x <- 1340 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
+    game$add_rectangle(
+      name = sprintf("life_bar_green_%02d", segment_index),
+      x = segment_x,
+      y = 60,
+      width = health_bar_segment_width,
+      height = health_bar_segment_height,
+      color = "#2ecc71"
+    )
+  })
   enemy_status_text <- game$add_text(
     text = "enemies: loading",
     id = "enemy_status",
@@ -304,8 +339,8 @@ server <- function(input, output, session) {
   combat_status_text <- game$add_text(
     text = "combat: find a weapon, then face the skeletons",
     id = "combat_status",
-    x = 1200,
-    y = 155
+    x = 800,
+    y = 660
   )
   update_enemy_status()
   game$add_text(
