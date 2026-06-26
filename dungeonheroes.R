@@ -159,26 +159,27 @@ server <- function(input, output, session) {
   game$add_control(
     "Space",
     action = function() {
-      if (has_sword) {
-        hero$play_animation("hero_sword")
-      } else {
-        hero$play_animation("hero_attack", duration = 500)
-      }
-      if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
-        target_name <- skeleton_in_range
-        skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
-        if (skeleton_hit_points[[target_name]] <= 0) {
-          skeleton_is_alive[target_name] <<- FALSE
-          skeletons[[target_name]]$destroy()
-          skeleton_in_range <<- NULL
-        }
-      }
       if (sword_in_range && !has_sword) {
         has_sword <<- TRUE
         sword_in_range <<- FALSE
         sword$destroy()
         inventory_text$set("weapon: sword")
         hero$play_animation("hero_sword")
+      } else {
+        if (has_sword) {
+          hero$play_animation("hero_sword")
+        } else {
+          hero$play_animation("hero_attack", duration = 500)
+        }
+        if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
+          target_name <- skeleton_in_range
+          skeleton_hit_points[target_name] <<- skeleton_hit_points[[target_name]] - 1
+          if (skeleton_hit_points[[target_name]] <= 0) {
+            skeleton_is_alive[target_name] <<- FALSE
+            skeletons[[target_name]]$destroy()
+            skeleton_in_range <<- NULL
+          }
+        }
       }
       if (wizard_in_range) {
         show_wizard_window(game, input, has_sword)
