@@ -2,6 +2,7 @@ library(shinyphaser)
 library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
+shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 ui <- shiny::tagList(
   game$use_phaser()
@@ -142,6 +143,37 @@ server <- function(input, output, session) {
         sword_in_range <<- FALSE
         sword$destroy()
         inventory_text$set("weapon: sword")
+        Sys.sleep(0.1)
+        hero$add_animation(
+          suffix = "idle",
+          url = "assets/sprites/hero_sword_idle.png",
+          frame_width = 100, frame_height = 100,
+          frame_count = 7, frame_rate = 4
+        )
+        hero$add_animation(
+          suffix = "move_down",
+          url = "assets/sprites/hero_sword_move_down.png",
+          frame_width = 100, frame_height = 100,
+          frame_count = 4, frame_rate = 8
+        )
+        hero$add_animation(
+          suffix = "move_up",
+          url = "assets/sprites/hero_sword_move_up.png",
+          frame_width = 100, frame_height = 100,
+          frame_count = 4, frame_rate = 8
+        )
+        hero$add_animation(
+          suffix = "move_left",
+          url = "assets/sprites/hero_sword_move_left.png",
+          frame_width = 100, frame_height = 100,
+          frame_count = 4, frame_rate = 8
+        )
+        hero$add_animation(
+          suffix = "move_right",
+          url = "assets/sprites/hero_sword_move_right.png",
+          frame_width = 100, frame_height = 100,
+          frame_count = 4, frame_rate = 8
+        )
       }
       if (wizard_in_range) {
         show_wizard_window(game, input, has_sword)
@@ -161,6 +193,12 @@ server <- function(input, output, session) {
     id = "inventory_weapon",
     x = 1200,
     y = 85
+  )
+  game$add_text(
+    text = sprintf("shinyphaser v%s", shinyphaser_version),
+    id = "shinyphaser_version",
+    x = 50,
+    y = 660
   )
 
   sword <- game$add_static_sprite(
