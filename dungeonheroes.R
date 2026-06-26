@@ -79,7 +79,6 @@ server <- function(input, output, session) {
   }
 
   update_life_points <- function() {
-    life_points_text$set(sprintf("life: %d/%d", life_points, max_life_points))
     visible_segments <- ceiling(life_points / max_life_points * health_bar_segment_count)
 
     lapply(seq_len(health_bar_segment_count), function(segment_index) {
@@ -296,12 +295,6 @@ server <- function(input, output, session) {
     input
   )
 
-  life_points_text <- game$add_text(
-    text = sprintf("life: %d/%d", life_points, max_life_points),
-    id = "life_points",
-    x = 1200,
-    y = 50
-  )
   inventory_text <- game$add_text(
     text = "weapon: none",
     id = "inventory_weapon",
