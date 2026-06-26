@@ -316,7 +316,7 @@ server <- function(input, output, session) {
       y = 60,
       width = health_bar_segment_width,
       height = health_bar_segment_height,
-      color = "#c0392b"
+      color = "0xc0392b"
     )
   })
   health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
@@ -327,9 +327,10 @@ server <- function(input, output, session) {
       y = 60,
       width = health_bar_segment_width,
       height = health_bar_segment_height,
-      color = "#2ecc71"
+      color = "0x2ecc71"
     )
   })
+  update_life_points()
   enemy_status_text <- game$add_text(
     text = "enemies: loading",
     id = "enemy_status",
