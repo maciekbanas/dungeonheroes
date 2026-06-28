@@ -13,8 +13,8 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 750, y = 480, hit_points = 3, damage = 8),
-    list(name = "skeleton_2", x = 870, y = 580, hit_points = 4, damage = 12)
+    list(name = "skeleton", x = 2400, y = 1200, hit_points = 3, damage = 8),
+    list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -380,8 +380,8 @@ server <- function(input, output, session) {
   wizard <- game$add_sprite(
     name = "wizard",
     url = "assets/sprites/wizard_idle.png",
-    x = 1200,
-    y = 300,
+    x = 1600,
+    y = 800,
     frame_width = 100,
     frame_height = 100,
     frame_count = 17,
@@ -397,8 +397,8 @@ server <- function(input, output, session) {
   talk_bubble_text <- game$add_text(
     text = "...",
     id = "talk_bubble_text",
-    x = 1200,
-    y = 193,
+    x = 1600,
+    y = 693,
     visible = FALSE
   )
   game$add_overlap(
