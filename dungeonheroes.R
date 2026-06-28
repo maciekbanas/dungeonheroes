@@ -119,11 +119,18 @@ server <- function(input, output, session) {
 
   game$set_shiny_session()
 
-  game$add_image(
-    name = "ground",
-    url = "assets/terrain/ground.png",
-    x = 800,
-    y = 300
+  game$add_map(
+    map_key = "mushroom_swamps",
+    map_url = "assets/maps/mushroom_swamps.json",
+    tileset_urls = c(
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_1.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png"
+    ),
+    tileset_names = c(
+      "mushroom_swamps_grass_1",
+      "mushroom_swamps_swamp_1"
+    ),
+    layer_name = "terrain"
   )
   hero <- game$add_sprite(
     name = "hero",
@@ -136,6 +143,7 @@ server <- function(input, output, session) {
     frame_rate = 4
   )
   hero$add_player_controls()
+  game$enable_terrain_collision("hero")
   Sys.sleep(0.1)
   hero$add_animation(
     suffix = "move_down",
