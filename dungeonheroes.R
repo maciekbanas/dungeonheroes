@@ -2,6 +2,11 @@ library(shinyphaser)
 library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
+map_tile_size <- 100
+map_tile_width <- 32
+map_tile_height <- 16
+world_width <- map_tile_width * map_tile_size
+world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 ui <- shiny::tagList(
@@ -119,6 +124,8 @@ server <- function(input, output, session) {
 
   game$set_shiny_session()
 
+  game$set_world_bounds(world_width, world_height)
+
   game$add_map(
     map_key = "mushroom_swamps",
     map_url = "assets/maps/mushroom_swamps.json",
@@ -143,6 +150,7 @@ server <- function(input, output, session) {
     frame_rate = 4
   )
   hero$add_player_controls()
+  hero$follow_camera()
   game$enable_terrain_collision("hero")
   Sys.sleep(0.1)
   hero$add_animation(
