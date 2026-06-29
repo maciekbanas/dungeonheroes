@@ -1,6 +1,6 @@
 Package: dungeonheroes
 Title: Dungeon Heroes Shiny Phaser Game
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: person("Maciej", "Banas", email = "banasmaciek@gmail.com", role = c("aut", "cre"))
 Description: A small browser dungeon game built with Shiny and shinyphaser.
 License: MIT
@@ -8,6 +8,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
+    later,
     shiny,
     shinyalert,
     shinyphaser
