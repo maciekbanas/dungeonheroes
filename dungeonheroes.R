@@ -2,6 +2,11 @@ library(shinyphaser)
 library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
+map_tile_size <- 100
+map_tile_width <- 32
+map_tile_height <- 16
+world_width <- map_tile_width * map_tile_size
+world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 ui <- shiny::tagList(
@@ -13,8 +18,8 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
-    list(name = "skeleton", x = 750, y = 480, hit_points = 3, damage = 8),
-    list(name = "skeleton_2", x = 870, y = 580, hit_points = 4, damage = 12)
+    list(name = "skeleton", x = 2400, y = 1200, hit_points = 3, damage = 8),
+    list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
@@ -119,11 +124,20 @@ server <- function(input, output, session) {
 
   game$set_shiny_session()
 
-  game$add_image(
-    name = "ground",
-    url = "assets/terrain/ground.png",
-    x = 800,
-    y = 300
+  game$set_world_bounds(world_width, world_height)
+
+  game$add_map(
+    map_key = "mushroom_swamps",
+    map_url = "assets/maps/mushroom_swamps.json",
+    tileset_urls = c(
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_1.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png"
+    ),
+    tileset_names = c(
+      "mushroom_swamps_grass_1",
+      "mushroom_swamps_swamp_1"
+    ),
+    layer_name = "terrain"
   )
   hero <- game$add_sprite(
     name = "hero",
@@ -136,7 +150,9 @@ server <- function(input, output, session) {
     frame_rate = 4
   )
   hero$add_player_controls()
+  hero$follow_camera()
   Sys.sleep(0.1)
+  game$enable_terrain_collision("hero")  
   hero$add_animation(
     suffix = "move_down",
     url = "assets/sprites/hero_move_down.png",
@@ -301,6 +317,7 @@ server <- function(input, output, session) {
     x = 1200,
     y = 85
   )
+  inventory_text$set_scroll_factor(0)
   lapply(seq_len(health_bar_segment_count), function(segment_index) {
     segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
     game$add_rectangle(
@@ -310,11 +327,11 @@ server <- function(input, output, session) {
       width = health_bar_segment_width,
       height = health_bar_segment_height,
       color = "0xc0392b"
-    )
+    )$set_scroll_factor(0)
   })
   health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
     segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
-    game$add_rectangle(
+    life_bar <- game$add_rectangle(
       name = sprintf("life_bar_green_%02d", segment_index),
       x = segment_x,
       y = 60,
@@ -322,6 +339,8 @@ server <- function(input, output, session) {
       height = health_bar_segment_height,
       color = "0x2ecc71"
     )
+    life_bar$set_scroll_factor(0)
+    life_bar
   })
   update_life_points()
   enemy_status_text <- game$add_text(
@@ -330,19 +349,22 @@ server <- function(input, output, session) {
     x = 1200,
     y = 120
   )
+  enemy_status_text$set_scroll_factor(0)
   combat_status_text <- game$add_text(
     text = "combat: find a weapon, then face the skeletons",
     id = "combat_status",
     x = 800,
     y = 660
   )
+  combat_status_text$set_scroll_factor(0)
   update_enemy_status()
-  game$add_text(
+  shinyphaser_version_text <- game$add_text(
     text = sprintf("shinyphaser v%s", shinyphaser_version),
     id = "shinyphaser_version",
     x = 50,
     y = 660
   )
+  shinyphaser_version_text$set_scroll_factor(0)
 
   sword <- game$add_static_sprite(
     name = "sword",
@@ -372,8 +394,8 @@ server <- function(input, output, session) {
   wizard <- game$add_sprite(
     name = "wizard",
     url = "assets/sprites/wizard_idle.png",
-    x = 1200,
-    y = 300,
+    x = 1600,
+    y = 800,
     frame_width = 100,
     frame_height = 100,
     frame_count = 17,
@@ -389,8 +411,8 @@ server <- function(input, output, session) {
   talk_bubble_text <- game$add_text(
     text = "...",
     id = "talk_bubble_text",
-    x = 1200,
-    y = 193,
+    x = 1600,
+    y = 693,
     visible = FALSE
   )
   game$add_overlap(
