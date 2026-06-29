@@ -125,7 +125,7 @@ server <- function(input, output, session) {
 
   hero_idle_animation <- function() {
     if (has_sword) {
-      return("hero_sword_idle")
+      return("hero_sword")
     }
 
     "hero"
