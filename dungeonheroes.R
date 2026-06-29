@@ -317,6 +317,7 @@ server <- function(input, output, session) {
     x = 1200,
     y = 85
   )
+  inventory_text$set_scroll_factor(0)
   lapply(seq_len(health_bar_segment_count), function(segment_index) {
     segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
     game$add_rectangle(
@@ -326,11 +327,11 @@ server <- function(input, output, session) {
       width = health_bar_segment_width,
       height = health_bar_segment_height,
       color = "0xc0392b"
-    )
+    )$set_scroll_factor(0)
   })
   health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
     segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
-    game$add_rectangle(
+    life_bar <- game$add_rectangle(
       name = sprintf("life_bar_green_%02d", segment_index),
       x = segment_x,
       y = 60,
@@ -338,6 +339,8 @@ server <- function(input, output, session) {
       height = health_bar_segment_height,
       color = "0x2ecc71"
     )
+    life_bar$set_scroll_factor(0)
+    life_bar
   })
   update_life_points()
   enemy_status_text <- game$add_text(
@@ -346,19 +349,22 @@ server <- function(input, output, session) {
     x = 1200,
     y = 120
   )
+  enemy_status_text$set_scroll_factor(0)
   combat_status_text <- game$add_text(
     text = "combat: find a weapon, then face the skeletons",
     id = "combat_status",
     x = 800,
     y = 660
   )
+  combat_status_text$set_scroll_factor(0)
   update_enemy_status()
-  game$add_text(
+  shinyphaser_version_text <- game$add_text(
     text = sprintf("shinyphaser v%s", shinyphaser_version),
     id = "shinyphaser_version",
     x = 50,
     y = 660
   )
+  shinyphaser_version_text$set_scroll_factor(0)
 
   sword <- game$add_static_sprite(
     name = "sword",
