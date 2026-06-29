@@ -8,6 +8,7 @@ map_tile_height <- 16
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
+dungeonheroes_version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
 
 ui <- shiny::tagList(
   game$use_phaser()
@@ -358,13 +359,13 @@ server <- function(input, output, session) {
   )
   combat_status_text$set_scroll_factor(0)
   update_enemy_status()
-  shinyphaser_version_text <- game$add_text(
-    text = sprintf("shinyphaser v%s", shinyphaser_version),
-    id = "shinyphaser_version",
+  version_text <- game$add_text(
+    text = sprintf("dungeonheroes v%s | shinyphaser v%s", dungeonheroes_version, shinyphaser_version),
+    id = "game_version",
     x = 50,
     y = 660
   )
-  shinyphaser_version_text$set_scroll_factor(0)
+  version_text$set_scroll_factor(0)
 
   sword <- game$add_static_sprite(
     name = "sword",

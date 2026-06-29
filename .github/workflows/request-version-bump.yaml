@@ -1,0 +1,55 @@
+name: Request version bump
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  request-version-bump:
+    name: Request version bump
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check DESCRIPTION version was bumped
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          LABELS_JSON: ${{ toJson(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+
+          if printf '%s' "$LABELS_JSON" | jq -e 'index("skip-version-bump") != null' >/dev/null; then
+            echo "skip-version-bump label present; version bump request skipped."
+            exit 0
+          fi
+
+          git fetch --no-tags --depth=1 origin "${BASE_REF}"
+
+          current_version=$(awk -F': *' '$1 == "Version" { print $2; exit }' DESCRIPTION)
+          if ! base_description=$(git show "origin/${BASE_REF}:DESCRIPTION" 2>/dev/null); then
+            echo "Base branch has no DESCRIPTION file; initial versioning is accepted."
+            exit 0
+          fi
+
+          base_version=$(printf '%s\n' "$base_description" | awk -F': *' '$1 == "Version" { print $2; exit }')
+
+          echo "Base version: ${base_version}"
+          echo "Pull request version: ${current_version}"
+
+          if [ -z "${current_version}" ]; then
+            echo "::error file=DESCRIPTION::DESCRIPTION must contain a Version field."
+            exit 1
+          fi
+
+          if [ "${current_version}" = "${base_version}" ]; then
+            echo "::error file=DESCRIPTION::Please bump the DESCRIPTION Version field or add the skip-version-bump label."
+            exit 1
+          fi
