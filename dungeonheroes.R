@@ -123,6 +123,30 @@ server <- function(input, output, session) {
     NULL
   }
 
+  hero_idle_animation <- function() {
+    if (has_sword) {
+      return("hero_sword_idle")
+    }
+
+    "hero"
+  }
+
+  play_hero_idle_animation <- function() {
+    hero$play_animation(hero_idle_animation())
+  }
+
+  play_hero_timed_animation <- function(animation_name, duration = 500) {
+    hero$play_animation(animation_name, duration = duration)
+    later::later(
+      function() {
+        if (life_points > 0) {
+          play_hero_idle_animation()
+        }
+      },
+      delay = duration / 1000
+    )
+  }
+
   game$set_shiny_session()
 
   game$set_world_bounds(world_width, world_height)
@@ -258,7 +282,7 @@ server <- function(input, output, session) {
         sword$destroy()
         inventory_text$set("weapon: sword")
         set_combat_status("You equipped the sword. Your attacks are stronger.")
-        hero$play_animation("hero_sword")
+        play_hero_idle_animation()
       } else {
         current_time <- as.numeric(Sys.time())
         if ((current_time - hero_last_attack_time) < hero_attack_cooldown) {
@@ -269,9 +293,9 @@ server <- function(input, output, session) {
         hero_last_attack_time <<- current_time
 
         if (has_sword) {
-          hero$play_animation("hero_sword_attack", duration = 500)
+          play_hero_timed_animation("hero_sword_attack", duration = 500)
         } else {
-          hero$play_animation("hero_attack", duration = 500)
+          play_hero_timed_animation("hero_attack", duration = 500)
         }
 
         target_name <- nearest_living_skeleton()
