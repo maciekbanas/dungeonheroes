@@ -151,8 +151,8 @@ server <- function(input, output, session) {
   )
   hero$add_player_controls()
   hero$follow_camera()
-  game$enable_terrain_collision("hero")
   Sys.sleep(0.1)
+  game$enable_terrain_collision("hero")  
   hero$add_animation(
     suffix = "move_down",
     url = "assets/sprites/hero_move_down.png",
