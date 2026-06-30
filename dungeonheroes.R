@@ -18,11 +18,23 @@ server <- function(input, output, session) {
   
   shiny::addResourcePath("assets", "assets")
 
-  skeleton_specs <- list(
-    list(name = "skeleton", x = 2400, y = 1200, hit_points = 3, damage = 8),
-    list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
+  enemy_specs <- list(
+    list(name = "mushroom_man_1", type = "mushroom_man", x = 2280, y = 1120, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_2", type = "mushroom_man", x = 2420, y = 1240, hit_points = 2, damage = 4, motion = "attack"),
+    list(name = "mushroom_man_3", type = "mushroom_man", x = 2560, y = 1120, hit_points = 2, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_4", type = "mushroom_man", x = 2700, y = 1320, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_5", type = "mushroom_man", x = 2340, y = 1480, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_6", type = "mushroom_man", x = 2520, y = 1560, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_7", type = "mushroom_man", x = 2760, y = 1540, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_8", type = "mushroom_man", x = 2880, y = 1280, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_9", type = "mushroom_man", x = 2200, y = 1700, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_10", type = "mushroom_man", x = 2900, y = 1720, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "skeleton", type = "skeleton", x = 2850, y = 2050, hit_points = 6, damage = 16, motion = "idle"),
+    list(name = "skeleton_2", type = "skeleton", x = 3050, y = 2250, hit_points = 7, damage = 18, motion = "idle"),
+    list(name = "skeleton_3", type = "skeleton", x = 2700, y = 2450, hit_points = 7, damage = 20, motion = "idle"),
+    list(name = "skeleton_4", type = "skeleton", x = 3000, y = 2650, hit_points = 8, damage = 22, motion = "idle")
   )
-  skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
+  enemy_names <- vapply(enemy_specs, `[[`, character(1), "name")
 
   wizard_laugh_sound <- game$add_sound(
     name = "wizard_laugh",
@@ -36,22 +48,22 @@ server <- function(input, output, session) {
 
   max_life_points <- 100
   life_points <- max_life_points
-  skeleton_max_hit_points <- stats::setNames(
-    vapply(skeleton_specs, `[[`, numeric(1), "hit_points"),
-    skeleton_names
+  enemy_max_hit_points <- stats::setNames(
+    vapply(enemy_specs, `[[`, numeric(1), "hit_points"),
+    enemy_names
   )
-  skeleton_hit_points <- skeleton_max_hit_points
-  skeleton_is_alive <- stats::setNames(rep(TRUE, length(skeleton_names)), skeleton_names)
-  skeleton_last_attack_time <- stats::setNames(
-    rep(as.numeric(Sys.time()) - 2, length(skeleton_names)),
-    skeleton_names
+  enemy_hit_points <- enemy_max_hit_points
+  enemy_is_alive <- stats::setNames(rep(TRUE, length(enemy_names)), enemy_names)
+  enemy_last_attack_time <- stats::setNames(
+    rep(as.numeric(Sys.time()) - 2, length(enemy_names)),
+    enemy_names
   )
-  skeleton_damage <- stats::setNames(
-    vapply(skeleton_specs, `[[`, numeric(1), "damage"),
-    skeleton_names
+  enemy_damage <- stats::setNames(
+    vapply(enemy_specs, `[[`, numeric(1), "damage"),
+    enemy_names
   )
-  skeleton_attack_cooldown <- 2
-  skeleton_in_range <- NULL
+  enemy_attack_cooldown <- 2
+  enemy_in_range <- NULL
   wizard_in_range <- FALSE
   sword_in_range <- FALSE
   has_sword <- FALSE
@@ -65,7 +77,7 @@ server <- function(input, output, session) {
   health_bar_segment_gap <- 3
   game_over_shown <- FALSE
   wizard_is_talking <- FALSE
-  defeated_skeleton_count <- 0
+  defeated_enemy_count <- 0
 
   show_intro_alerts <- function() {
     shinyalert::shinyalert(
@@ -82,13 +94,18 @@ server <- function(input, output, session) {
 
   session$onFlushed(show_intro_alerts, once = TRUE)
 
-  skeleton_animation_key <- function(skeleton_name, suffix) {
-    paste(skeleton_name, suffix, sep = "_")
+  enemy_animation_key <- function(enemy_name, suffix) {
+    paste(enemy_name, suffix, sep = "_")
   }
 
-  format_skeleton_label <- function(skeleton_name) {
-    gsub("_", " ", skeleton_name)
+  format_enemy_label <- function(enemy_name) {
+    gsub("_", " ", enemy_name)
   }
+
+  enemy_motion <- stats::setNames(
+    vapply(enemy_specs, `[[`, character(1), "motion"),
+    enemy_names
+  )
 
   set_combat_status <- function(message) {
     combat_status_text$set(message)
@@ -107,27 +124,27 @@ server <- function(input, output, session) {
   }
 
   update_enemy_status <- function() {
-    living_skeleton_names <- skeleton_names[skeleton_is_alive]
-    if (length(living_skeleton_names) == 0) {
+    living_enemy_names <- enemy_names[enemy_is_alive]
+    if (length(living_enemy_names) == 0) {
       enemy_status_text$set("enemies: defeated")
       return()
     }
 
-    enemy_summaries <- vapply(living_skeleton_names, function(skeleton_name) {
+    enemy_summaries <- vapply(living_enemy_names, function(skeleton_name) {
       sprintf(
         "%s %d/%d",
-        format_skeleton_label(skeleton_name),
-        skeleton_hit_points[[skeleton_name]],
-        skeleton_max_hit_points[[skeleton_name]]
+        format_enemy_label(skeleton_name),
+        enemy_hit_points[[skeleton_name]],
+        enemy_max_hit_points[[skeleton_name]]
       )
     }, character(1))
 
     enemy_status_text$set(paste("enemies:", paste(enemy_summaries, collapse = " | ")))
   }
 
-  nearest_living_skeleton <- function() {
-    if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
-      return(skeleton_in_range)
+  nearest_living_enemy <- function() {
+    if (!is.null(enemy_in_range) && isTRUE(enemy_is_alive[[enemy_in_range]])) {
+      return(enemy_in_range)
     }
 
     NULL
@@ -294,27 +311,51 @@ server <- function(input, output, session) {
     frame_count = 2, frame_rate = 4
   )
 
-  skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
-    skel <- game$add_sprite(
-      name = spec$name,
-      url = "assets/sprites/skeleton_idle.png",
-      x = spec$x,
-      y = spec$y,
-      frame_width = 100,
-      frame_height = 100,
-      frame_count = 8,
-      frame_rate = 4
-    )
+  enemies <- stats::setNames(lapply(enemy_specs, function(spec) {
+    if (identical(spec$type, "mushroom_man")) {
+      enemy <- game$add_sprite(
+        name = spec$name,
+        url = "assets/sprites/mushroom_man_walk.png",
+        x = spec$x,
+        y = spec$y,
+        frame_width = 32,
+        frame_height = 32,
+        frame_count = 12,
+        frame_rate = 8
+      )
 
-    skel$add_animation(
-      suffix = "attack",
-      url = "assets/sprites/skeleton_attack.png",
-      frame_width = 100, frame_height = 100,
-      frame_count = 2, frame_rate = 4
-    )
+      enemy$add_animation(
+        suffix = "attack",
+        url = "assets/sprites/mushroom_man_attack.png",
+        frame_width = 32, frame_height = 32,
+        frame_count = 6, frame_rate = 6
+      )
 
-    skel
-  }), skeleton_names)
+      if (identical(spec$motion, "attack")) {
+        enemy$play_animation(enemy_animation_key(spec$name, "attack"))
+      }
+    } else {
+      enemy <- game$add_sprite(
+        name = spec$name,
+        url = "assets/sprites/skeleton_idle.png",
+        x = spec$x,
+        y = spec$y,
+        frame_width = 100,
+        frame_height = 100,
+        frame_count = 8,
+        frame_rate = 4
+      )
+
+      enemy$add_animation(
+        suffix = "attack",
+        url = "assets/sprites/skeleton_attack.png",
+        frame_width = 100, frame_height = 100,
+        frame_count = 2, frame_rate = 4
+      )
+    }
+
+    enemy
+  }), enemy_names)
 
   game$add_control(
     "Space",
@@ -346,29 +387,29 @@ server <- function(input, output, session) {
           play_hero_timed_animation("hero_attack", duration = 500)
         }
 
-        target_name <- nearest_living_skeleton()
+        target_name <- nearest_living_enemy()
         if (!is.null(target_name)) {
           attack_damage <- if (has_sword) hero_sword_damage else hero_fist_damage
-          skeleton_hit_points[target_name] <<- max(
-            skeleton_hit_points[[target_name]] - attack_damage,
+          enemy_hit_points[target_name] <<- max(
+            enemy_hit_points[[target_name]] - attack_damage,
             0
           )
 
-          if (skeleton_hit_points[[target_name]] <= 0) {
-            skeleton_is_alive[target_name] <<- FALSE
-            skeletons[[target_name]]$destroy()
-            skeleton_in_range <<- NULL
-            defeated_skeleton_count <<- defeated_skeleton_count + 1
+          if (enemy_hit_points[[target_name]] <= 0) {
+            enemy_is_alive[target_name] <<- FALSE
+            enemies[[target_name]]$destroy()
+            enemy_in_range <<- NULL
+            defeated_enemy_count <<- defeated_enemy_count + 1
             set_combat_status(sprintf(
               "You defeated %s (%d/%d defeated).",
-              format_skeleton_label(target_name),
-              defeated_skeleton_count,
-              length(skeleton_names)
+              format_enemy_label(target_name),
+              defeated_enemy_count,
+              length(enemy_names)
             ))
           } else {
             set_combat_status(sprintf(
               "You hit %s for %d damage.",
-              format_skeleton_label(target_name),
+              format_enemy_label(target_name),
               attack_damage
             ))
           }
@@ -425,7 +466,7 @@ server <- function(input, output, session) {
   )
   enemy_status_text$set_scroll_factor(0)
   combat_status_text <- game$add_text(
-    text = "combat: find a weapon, then face the skeletons",
+    text = "combat: find a weapon, then face the enemies",
     id = "combat_status",
     x = 800,
     y = 660
@@ -514,31 +555,31 @@ server <- function(input, output, session) {
     input = input
   )
 
-  add_skeleton_handlers <- function(skeleton_name) {
+  add_enemy_handlers <- function(skeleton_name) {
     force(skeleton_name)
 
     game$add_overlap(
       object_one = "hero",
       object_two = skeleton_name,
       callback_fun = function(evt) {
-        skeleton_in_range <<- skeleton_name
-        if (!isTRUE(skeleton_is_alive[[skeleton_name]])) {
+        enemy_in_range <<- skeleton_name
+        if (!isTRUE(enemy_is_alive[[skeleton_name]])) {
           return()
         }
 
         current_time <- as.numeric(Sys.time())
-        if ((current_time - skeleton_last_attack_time[[skeleton_name]]) >= skeleton_attack_cooldown) {
-          skeleton_last_attack_time[skeleton_name] <<- current_time
-          skeletons[[skeleton_name]]$play_animation(
-            skeleton_animation_key(skeleton_name, "attack"),
+        if ((current_time - enemy_last_attack_time[[skeleton_name]]) >= enemy_attack_cooldown) {
+          enemy_last_attack_time[skeleton_name] <<- current_time
+          enemies[[skeleton_name]]$play_animation(
+            enemy_animation_key(skeleton_name, "attack"),
             duration = 350
           )
-          damage <- skeleton_damage[[skeleton_name]]
+          damage <- enemy_damage[[skeleton_name]]
           life_points <<- max(life_points - damage, 0)
           update_life_points()
           set_combat_status(sprintf(
             "%s strikes you for %d damage.",
-            format_skeleton_label(skeleton_name),
+            format_enemy_label(skeleton_name),
             damage
           ))
           if (life_points <= 0 && !game_over_shown) {
@@ -558,18 +599,18 @@ server <- function(input, output, session) {
       object_one = "hero",
       object_two = skeleton_name,
       callback_fun = function(evt) {
-        if (identical(skeleton_in_range, skeleton_name)) {
-          skeleton_in_range <<- NULL
+        if (identical(enemy_in_range, skeleton_name)) {
+          enemy_in_range <<- NULL
         }
-        if (isTRUE(skeleton_is_alive[[skeleton_name]])) {
-          skeletons[[skeleton_name]]$play_animation(skeleton_animation_key(skeleton_name, "idle"))
+        if (isTRUE(enemy_is_alive[[skeleton_name]])) {
+          enemies[[skeleton_name]]$play_animation(enemy_animation_key(skeleton_name, enemy_motion[[skeleton_name]]))
         }
       },
       input = input
     )
   }
 
-  lapply(skeleton_names, add_skeleton_handlers)
+  lapply(enemy_names, add_enemy_handlers)
 }
 
 show_wizard_window <- function(game, input, has_sword = FALSE) {
