@@ -24,6 +24,16 @@ server <- function(input, output, session) {
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
 
+  wizard_laugh_sound <- game$add_sound(
+    name = "wizard_laugh",
+    url = "assets/sounds/wizard_laugh.wav"
+  )
+
+  hero_attack_sound <- game$add_sound(
+    name = "hero_attack",
+    url = "assets/sounds/attack.wav"
+  )
+
   max_life_points <- 100
   life_points <- max_life_points
   skeleton_max_hit_points <- stats::setNames(
@@ -291,7 +301,7 @@ server <- function(input, output, session) {
         }
 
         hero_last_attack_time <<- current_time
-
+        hero_attack_sound$play()
         if (has_sword) {
           play_hero_timed_animation("hero_sword_attack", duration = 500)
         } else {
@@ -330,6 +340,7 @@ server <- function(input, output, session) {
         }
       }
       if (wizard_in_range) {
+        wizard_laugh_sound$play()
         show_wizard_window(game, input, has_sword)
       }
     },
