@@ -15,7 +15,7 @@ ui <- shiny::tagList(
 )
 
 server <- function(input, output, session) {
-
+  
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
@@ -535,15 +535,9 @@ server <- function(input, output, session) {
 }
 
 show_wizard_window <- function(game, input, has_sword = FALSE) {
-  greeting <- if (has_sword) {
-    "You found the sword. The wizard believes you are ready for the next challenge."
-  } else {
-    "Welcome, brave hero! Find the sword before facing the deepest dungeon challenge."
-  }
-
   shinyalert::shinyalert(
-    title = "Greetings from the Wizard",
-    text = greeting,
+    title = "Dear, oh dear. What are you doing here in these dark forests, lad?",
+    text = "",
     type = "info"
   )
 }
