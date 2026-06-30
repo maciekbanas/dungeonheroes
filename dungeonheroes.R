@@ -29,9 +29,9 @@ server <- function(input, output, session) {
     list(name = "mushroom_man_8", type = "mushroom_man", x = 2880, y = 1280, hit_points = 3, damage = 5, motion = "attack"),
     list(name = "mushroom_man_9", type = "mushroom_man", x = 2200, y = 1700, hit_points = 2, damage = 4, motion = "walk"),
     list(name = "mushroom_man_10", type = "mushroom_man", x = 2900, y = 1720, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "skeleton", type = "skeleton", x = 2850, y = 2050, hit_points = 6, damage = 16, motion = "idle"),
+    list(name = "skeleton", type = "skeleton", x = 2850, y = 2150, hit_points = 6, damage = 16, motion = "idle"),
     list(name = "skeleton_2", type = "skeleton", x = 3050, y = 2250, hit_points = 7, damage = 18, motion = "idle"),
-    list(name = "skeleton_3", type = "skeleton", x = 2700, y = 2450, hit_points = 7, damage = 20, motion = "idle"),
+    list(name = "skeleton_3", type = "skeleton", x = 2700, y = 2350, hit_points = 7, damage = 20, motion = "idle"),
     list(name = "skeleton_4", type = "skeleton", x = 3000, y = 2650, hit_points = 8, damage = 22, motion = "idle")
   )
   enemy_names <- vapply(enemy_specs, `[[`, character(1), "name")
@@ -318,8 +318,8 @@ server <- function(input, output, session) {
         url = "assets/sprites/mushroom_man_walk.png",
         x = spec$x,
         y = spec$y,
-        frame_width = 32,
-        frame_height = 32,
+        frame_width = 100,
+        frame_height = 100,
         frame_count = 12,
         frame_rate = 8
       )
@@ -327,7 +327,7 @@ server <- function(input, output, session) {
       enemy$add_animation(
         suffix = "attack",
         url = "assets/sprites/mushroom_man_attack.png",
-        frame_width = 32, frame_height = 32,
+        frame_width = 100, frame_height = 100,
         frame_count = 6, frame_rate = 6
       )
 
