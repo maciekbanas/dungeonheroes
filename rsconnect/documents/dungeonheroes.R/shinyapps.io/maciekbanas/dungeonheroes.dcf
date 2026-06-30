@@ -1,0 +1,12 @@
+name: dungeonheroes
+title: dungeonheroes
+username: maciekbanas
+account: maciekbanas
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17568428
+bundleId: 12201497
+url: https://maciekbanas.shinyapps.io/dungeonheroes/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

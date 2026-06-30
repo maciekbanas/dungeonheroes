@@ -4,7 +4,7 @@ library(shinyalert)
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
-map_tile_height <- 16
+map_tile_height <- 64
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
@@ -15,7 +15,7 @@ ui <- shiny::tagList(
 )
 
 server <- function(input, output, session) {
-
+  
   shiny::addResourcePath("assets", "assets")
 
   skeleton_specs <- list(
@@ -23,6 +23,16 @@ server <- function(input, output, session) {
     list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
   )
   skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
+
+  wizard_laugh_sound <- game$add_sound(
+    name = "wizard_laugh",
+    url = "assets/sounds/wizard_laugh.wav"
+  )
+
+  hero_attack_sound <- game$add_sound(
+    name = "hero_attack",
+    url = "assets/sounds/attack.wav"
+  )
 
   max_life_points <- 100
   life_points <- max_life_points
@@ -156,11 +166,49 @@ server <- function(input, output, session) {
     map_url = "assets/maps/mushroom_swamps.json",
     tileset_urls = c(
       "assets/terrain/mushroom_swamps/mushroom_swamps_grass_1.png",
-      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png"
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_2.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_3.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_4.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_5.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
-      "mushroom_swamps_swamp_1"
+      "mushroom_swamps_swamp_1",
+      "mushroom_swamps_swamp_bank_bottom",
+      "mushroom_swamps_swamp_bank_bottom_right",
+      "mushroom_swamps_swamp_bank_left",
+      "mushroom_swamps_swamp_bank_left_bottom",
+      "mushroom_swamps_swamp_bank_left_bottom_right",
+      "mushroom_swamps_swamp_bank_right",
+      "mushroom_swamps_swamp_bank_top_bottom_left_right",
+      "mushroom_swamps_swamp_bank_top_left",
+      "mushroom_swamps_swamp_bank_top_left_right",
+      "mushroom_swamps_swamp_bank_top_right",
+      "mushroom_swamps_swamp_bank_top",
+      "mushroom_swamps_swamp_bank_top_bottom",
+      "mushroom_swamps_swamp_bank_top_bottom_left",
+      "mushroom_swamps_swamp_bank_top_bottom_right",
+      "mushroom_swamps_swamp_bank_left_right",
+      "mushroom_swamps_grass_2",
+      "mushroom_swamps_grass_3",
+      "mushroom_swamps_grass_4",
+      "mushroom_swamps_grass_5"
     ),
     layer_name = "terrain"
   )
@@ -291,7 +339,7 @@ server <- function(input, output, session) {
         }
 
         hero_last_attack_time <<- current_time
-
+        hero_attack_sound$play()
         if (has_sword) {
           play_hero_timed_animation("hero_sword_attack", duration = 500)
         } else {
@@ -330,6 +378,7 @@ server <- function(input, output, session) {
         }
       }
       if (wizard_in_range) {
+        wizard_laugh_sound$play()
         show_wizard_window(game, input, has_sword)
       }
     },
@@ -524,15 +573,9 @@ server <- function(input, output, session) {
 }
 
 show_wizard_window <- function(game, input, has_sword = FALSE) {
-  greeting <- if (has_sword) {
-    "You found the sword. The wizard believes you are ready for the next challenge."
-  } else {
-    "Welcome, brave hero! Find the sword before facing the deepest dungeon challenge."
-  }
-
   shinyalert::shinyalert(
-    title = "Greetings from the Wizard",
-    text = greeting,
+    title = "Dear, oh dear. What are you doing here in these dark forests, lad?",
+    text = "",
     type = "info"
   )
 }
