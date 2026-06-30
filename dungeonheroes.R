@@ -4,7 +4,7 @@ library(shinyalert)
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
-map_tile_height <- 16
+map_tile_height <- 64
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
@@ -166,11 +166,49 @@ server <- function(input, output, session) {
     map_url = "assets/maps/mushroom_swamps.json",
     tileset_urls = c(
       "assets/terrain/mushroom_swamps/mushroom_swamps_grass_1.png",
-      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png"
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_left.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_top_bottom_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_right.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_2.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_3.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_4.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_5.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
-      "mushroom_swamps_swamp_1"
+      "mushroom_swamps_swamp_1",
+      "mushroom_swamps_swamp_bank_bottom",
+      "mushroom_swamps_swamp_bank_bottom_right",
+      "mushroom_swamps_swamp_bank_left",
+      "mushroom_swamps_swamp_bank_left_bottom",
+      "mushroom_swamps_swamp_bank_left_bottom_right",
+      "mushroom_swamps_swamp_bank_right",
+      "mushroom_swamps_swamp_bank_top_bottom_left_right",
+      "mushroom_swamps_swamp_bank_top_left",
+      "mushroom_swamps_swamp_bank_top_left_right",
+      "mushroom_swamps_swamp_bank_top_right",
+      "mushroom_swamps_swamp_bank_top",
+      "mushroom_swamps_swamp_bank_top_bottom",
+      "mushroom_swamps_swamp_bank_top_bottom_left",
+      "mushroom_swamps_swamp_bank_top_bottom_right",
+      "mushroom_swamps_swamp_bank_left_right",
+      "mushroom_swamps_grass_2",
+      "mushroom_swamps_grass_3",
+      "mushroom_swamps_grass_4",
+      "mushroom_swamps_grass_5"
     ),
     layer_name = "terrain"
   )
