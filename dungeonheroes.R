@@ -184,7 +184,8 @@ server <- function(input, output, session) {
       "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_bank_left_right.png",
       "assets/terrain/mushroom_swamps/mushroom_swamps_grass_2.png",
       "assets/terrain/mushroom_swamps/mushroom_swamps_grass_3.png",
-      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_4.png"
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_4.png",
+      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_5.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
@@ -206,7 +207,8 @@ server <- function(input, output, session) {
       "mushroom_swamps_swamp_bank_left_right",
       "mushroom_swamps_grass_2",
       "mushroom_swamps_grass_3",
-      "mushroom_swamps_grass_4"
+      "mushroom_swamps_grass_4",
+      "mushroom_swamps_grass_5"
     ),
     layer_name = "terrain"
   )
