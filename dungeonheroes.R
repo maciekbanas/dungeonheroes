@@ -19,16 +19,16 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   enemy_specs <- list(
-    list(name = "mushroom_man_1", type = "mushroom_man", x = 450, y = 2850, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_2", type = "mushroom_man", x = 750, y = 3150, hit_points = 2, damage = 4, motion = "attack"),
-    list(name = "mushroom_man_3", type = "mushroom_man", x = 1450, y = 3250, hit_points = 2, damage = 5, motion = "walk"),
-    list(name = "mushroom_man_4", type = "mushroom_man", x = 2250, y = 3050, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_5", type = "mushroom_man", x = 2850, y = 2950, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_6", type = "mushroom_man", x = 1150, y = 3850, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_7", type = "mushroom_man", x = 2150, y = 3950, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_8", type = "mushroom_man", x = 3050, y = 4050, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_9", type = "mushroom_man", x = 1750, y = 4750, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_10", type = "mushroom_man", x = 2550, y = 4850, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_1", type = "mushroom_man", x = 150, y = 1850, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_2", type = "mushroom_man", x = 850, y = 2150, hit_points = 2, damage = 4, motion = "attack"),
+    list(name = "mushroom_man_3", type = "mushroom_man", x = 1750, y = 2450, hit_points = 2, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_4", type = "mushroom_man", x = 2650, y = 2350, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_5", type = "mushroom_man", x = 450, y = 3250, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_6", type = "mushroom_man", x = 1450, y = 3850, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_7", type = "mushroom_man", x = 2450, y = 3950, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_8", type = "mushroom_man", x = 2850, y = 4550, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_9", type = "mushroom_man", x = 950, y = 5250, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_10", type = "mushroom_man", x = 2150, y = 5550, hit_points = 3, damage = 5, motion = "attack"),
     list(name = "skeleton", type = "skeleton", x = 2850, y = 2150, hit_points = 6, damage = 16, motion = "idle"),
     list(name = "skeleton_2", type = "skeleton", x = 3050, y = 2250, hit_points = 7, damage = 18, motion = "idle"),
     list(name = "skeleton_3", type = "skeleton", x = 2700, y = 2350, hit_points = 7, damage = 20, motion = "idle"),
@@ -111,6 +111,18 @@ server <- function(input, output, session) {
     enemy_names
   )
   mushroom_enemy_names <- enemy_names[enemy_type == "mushroom_man"]
+  mushroom_motion_specs <- list(
+    mushroom_man_1 = list(speed = 42, distance = 70, lag = 0.0, interval = 1300),
+    mushroom_man_2 = list(speed = 48, distance = 95, lag = 0.2, interval = 1700),
+    mushroom_man_3 = list(speed = 54, distance = 80, lag = 0.4, interval = 1500),
+    mushroom_man_4 = list(speed = 60, distance = 110, lag = 0.1, interval = 2100),
+    mushroom_man_5 = list(speed = 46, distance = 125, lag = 0.3, interval = 1900),
+    mushroom_man_6 = list(speed = 52, distance = 85, lag = 0.5, interval = 1600),
+    mushroom_man_7 = list(speed = 58, distance = 100, lag = 0.6, interval = 2300),
+    mushroom_man_8 = list(speed = 44, distance = 115, lag = 0.2, interval = 1800),
+    mushroom_man_9 = list(speed = 56, distance = 75, lag = 0.4, interval = 1400),
+    mushroom_man_10 = list(speed = 50, distance = 105, lag = 0.7, interval = 2200)
+  )
 
   set_combat_status <- function(message) {
     combat_status_text$set(message)
@@ -366,10 +378,14 @@ server <- function(input, output, session) {
     game$enable_terrain_collision(enemy_name)
   })
 
-  shiny::observe({
-    shiny::invalidateLater(900, session)
+  lapply(mushroom_enemy_names, function(enemy_name) {
+    motion_spec <- mushroom_motion_specs[[enemy_name]]
+    force(enemy_name)
+    force(motion_spec)
 
-    lapply(mushroom_enemy_names, function(enemy_name) {
+    shiny::observe({
+      shiny::invalidateLater(motion_spec$interval, session)
+
       if (!isTRUE(enemy_is_alive[[enemy_name]])) {
         return(NULL)
       }
@@ -381,9 +397,9 @@ server <- function(input, output, session) {
       enemies[[enemy_name]]$set_in_motion(
         dir_x = direction[1],
         dir_y = direction[2],
-        speed = 55,
-        distance = 90,
-        lag = 0
+        speed = motion_spec$speed,
+        distance = motion_spec$distance,
+        lag = motion_spec$lag
       )
     })
   })
