@@ -19,16 +19,16 @@ server <- function(input, output, session) {
   shiny::addResourcePath("assets", "assets")
 
   enemy_specs <- list(
-    list(name = "mushroom_man_1", type = "mushroom_man", x = 2280, y = 1120, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_2", type = "mushroom_man", x = 2420, y = 1240, hit_points = 2, damage = 4, motion = "attack"),
-    list(name = "mushroom_man_3", type = "mushroom_man", x = 2560, y = 1120, hit_points = 2, damage = 5, motion = "walk"),
-    list(name = "mushroom_man_4", type = "mushroom_man", x = 2700, y = 1320, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_5", type = "mushroom_man", x = 2340, y = 1480, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_6", type = "mushroom_man", x = 2520, y = 1560, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_7", type = "mushroom_man", x = 2760, y = 1540, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_8", type = "mushroom_man", x = 2880, y = 1280, hit_points = 3, damage = 5, motion = "attack"),
-    list(name = "mushroom_man_9", type = "mushroom_man", x = 2200, y = 1700, hit_points = 2, damage = 4, motion = "walk"),
-    list(name = "mushroom_man_10", type = "mushroom_man", x = 2900, y = 1720, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_1", type = "mushroom_man", x = 450, y = 2850, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_2", type = "mushroom_man", x = 750, y = 3150, hit_points = 2, damage = 4, motion = "attack"),
+    list(name = "mushroom_man_3", type = "mushroom_man", x = 1450, y = 3250, hit_points = 2, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_4", type = "mushroom_man", x = 2250, y = 3050, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_5", type = "mushroom_man", x = 2850, y = 2950, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_6", type = "mushroom_man", x = 1150, y = 3850, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_7", type = "mushroom_man", x = 2150, y = 3950, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_8", type = "mushroom_man", x = 3050, y = 4050, hit_points = 3, damage = 5, motion = "attack"),
+    list(name = "mushroom_man_9", type = "mushroom_man", x = 1750, y = 4750, hit_points = 2, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_10", type = "mushroom_man", x = 2550, y = 4850, hit_points = 3, damage = 5, motion = "attack"),
     list(name = "skeleton", type = "skeleton", x = 2850, y = 2150, hit_points = 6, damage = 16, motion = "idle"),
     list(name = "skeleton_2", type = "skeleton", x = 3050, y = 2250, hit_points = 7, damage = 18, motion = "idle"),
     list(name = "skeleton_3", type = "skeleton", x = 2700, y = 2350, hit_points = 7, damage = 20, motion = "idle"),
@@ -102,10 +102,15 @@ server <- function(input, output, session) {
     gsub("_", " ", enemy_name)
   }
 
+  enemy_type <- stats::setNames(
+    vapply(enemy_specs, `[[`, character(1), "type"),
+    enemy_names
+  )
   enemy_motion <- stats::setNames(
     vapply(enemy_specs, `[[`, character(1), "motion"),
     enemy_names
   )
+  mushroom_enemy_names <- enemy_names[enemy_type == "mushroom_man"]
 
   set_combat_status <- function(message) {
     combat_status_text$set(message)
@@ -356,6 +361,32 @@ server <- function(input, output, session) {
 
     enemy
   }), enemy_names)
+
+  lapply(mushroom_enemy_names, function(enemy_name) {
+    game$enable_terrain_collision(enemy_name)
+  })
+
+  shiny::observe({
+    shiny::invalidateLater(900, session)
+
+    lapply(mushroom_enemy_names, function(enemy_name) {
+      if (!isTRUE(enemy_is_alive[[enemy_name]])) {
+        return(NULL)
+      }
+
+      direction <- sample(
+        list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1)),
+        1
+      )[[1]]
+      enemies[[enemy_name]]$set_in_motion(
+        dir_x = direction[1],
+        dir_y = direction[2],
+        speed = 55,
+        distance = 90,
+        lag = 0
+      )
+    })
+  })
 
   game$add_control(
     "Space",
