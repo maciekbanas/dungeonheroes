@@ -1,6 +1,11 @@
 library(shiny)
 library(shinyphaser)
 
+shiny::addResourcePath(
+  prefix = "dungeonheroes-assets",
+  directoryPath = normalizePath("www/assets", mustWork = TRUE)
+)
+
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
@@ -34,7 +39,7 @@ ui <- shiny::tagList(
     #dungeonheroes_loader .skeleton_loader_sprite {
       width: 100px;
       height: 100px;
-      background-image: url('assets/dungeonheroes/sprites/skeleton_idle.png');
+      background-image: url('dungeonheroes-assets/sprites/skeleton_idle.png');
       background-repeat: no-repeat;
       animation: dungeonheroes-skeleton-loader 1s steps(8) infinite;
       image-rendering: pixelated;
@@ -84,12 +89,12 @@ server <- function(input, output, session) {
 
   wizard_laugh_sound <- game$add_sound(
     name = "wizard_laugh",
-    url = "assets/dungeonheroes/sounds/wizard_laugh.wav"
+    url = "dungeonheroes-assets/sounds/wizard_laugh.wav"
   )
 
   hero_attack_sound <- game$add_sound(
     name = "hero_attack",
-    url = "assets/dungeonheroes/sounds/attack.wav"
+    url = "dungeonheroes-assets/sounds/attack.wav"
   )
 
   max_life_points <- 100
@@ -239,29 +244,29 @@ server <- function(input, output, session) {
 
   game$add_map(
     map_key = "mushroom_swamps",
-    map_url = "assets/dungeonheroes/maps/mushroom_swamps.json",
+    map_url = "dungeonheroes-assets/maps/mushroom_swamps.json",
     tileset_urls = c(
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_grass_1.png",
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_swamp_1.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_bottom.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_bottom_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_left.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_left_bottom.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_left_bottom_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_bottom_left_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_left.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_left_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_bottom.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_bottom_left.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_top_bottom_right.png",
-      "assets/dungeonheroes/terrain/ms/ms_bank_left_right.png",
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_grass_2.png",
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_grass_3.png",
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_grass_4.png",
-      "assets/dungeonheroes/terrain/ms/mushroom_swamps_grass_5.png"
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_1.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_swamp_1.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_left_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_left_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_right.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_2.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_3.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_4.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_5.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
@@ -290,7 +295,7 @@ server <- function(input, output, session) {
   )
   hero <- game$add_sprite(
     name = "hero",
-    url = "assets/dungeonheroes/sprites/hero_idle.png",
+    url = "dungeonheroes-assets/sprites/hero_idle.png",
     x = 100,
     y = 100,
     frame_width = 100,
@@ -304,68 +309,68 @@ server <- function(input, output, session) {
   game$enable_terrain_collision("hero")
   hero$add_animation(
     suffix = "move_down",
-    url = "assets/dungeonheroes/sprites/hero_move_down.png",
+    url = "dungeonheroes-assets/sprites/hero_move_down.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_up",
-    url = "assets/dungeonheroes/sprites/hero_move_up.png",
+    url = "dungeonheroes-assets/sprites/hero_move_up.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_left",
-    url = "assets/dungeonheroes/sprites/hero_move_left.png",
+    url = "dungeonheroes-assets/sprites/hero_move_left.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_right",
-    url = "assets/dungeonheroes/sprites/hero_move_right.png",
+    url = "dungeonheroes-assets/sprites/hero_move_right.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "attack",
-    url = "assets/dungeonheroes/sprites/hero_attack.png",
+    url = "dungeonheroes-assets/sprites/hero_attack.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
 
   hero$add_animation(
     suffix = "sword_idle",
-    url = "assets/dungeonheroes/sprites/hero_sword_idle.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_idle.png",
     frame_width = 100, frame_height = 100,
     frame_count = 7, frame_rate = 4
   )
   hero$add_animation(
     suffix = "sword_move_down",
-    url = "assets/dungeonheroes/sprites/hero_sword_move_down.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_down.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_up",
-    url = "assets/dungeonheroes/sprites/hero_sword_move_up.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_up.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_left",
-    url = "assets/dungeonheroes/sprites/hero_sword_move_left.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_left.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_right",
-    url = "assets/dungeonheroes/sprites/hero_sword_move_right.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_right.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_attack",
-    url = "assets/dungeonheroes/sprites/hero_sword_attack.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_attack.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
@@ -373,7 +378,7 @@ server <- function(input, output, session) {
   enemies <- stats::setNames(lapply(enemy_specs, function(spec) {
     enemy <- game$add_sprite(
       name = spec$name,
-      url = "assets/dungeonheroes/sprites/mushroom_man_idle.png",
+      url = "dungeonheroes-assets/sprites/mushroom_man_idle.png",
       x = spec$x,
       y = spec$y,
       frame_width = 100,
@@ -385,7 +390,7 @@ server <- function(input, output, session) {
     lapply(c("down", "left", "right", "up"), function(direction) {
       enemy$add_animation(
         suffix = paste0("move_", direction),
-        url = sprintf("assets/dungeonheroes/sprites/mushroom_man_walk_%s.png", direction),
+        url = sprintf("dungeonheroes-assets/sprites/mushroom_man_walk_%s.png", direction),
         frame_width = 100, frame_height = 100,
         frame_count = 12, frame_rate = 8
       )
@@ -393,13 +398,13 @@ server <- function(input, output, session) {
 
     enemy$add_animation(
       suffix = "attack",
-      url = "assets/dungeonheroes/sprites/mushroom_man_attack.png",
+      url = "dungeonheroes-assets/sprites/mushroom_man_attack.png",
       frame_width = 100, frame_height = 100,
       frame_count = 6, frame_rate = 6
     )
     enemy$add_animation(
       suffix = "destroy",
-      url = "assets/dungeonheroes/sprites/mushroom_man_destroy.png",
+      url = "dungeonheroes-assets/sprites/mushroom_man_destroy.png",
       frame_width = 100, frame_height = 100,
       frame_count = 6, frame_rate = 8
     )
@@ -518,7 +523,7 @@ server <- function(input, output, session) {
 
   sword <- game$add_static_sprite(
     name = "sword",
-    url = "assets/dungeonheroes/weapons/sword.png",
+    url = "dungeonheroes-assets/weapons/sword.png",
     x = 300,
     y = 300
   )
@@ -526,7 +531,7 @@ server <- function(input, output, session) {
 
   wizard <- game$add_sprite(
     name = "wizard",
-    url = "assets/dungeonheroes/sprites/wizard_idle.png",
+    url = "dungeonheroes-assets/sprites/wizard_idle.png",
     x = 1600,
     y = 800,
     frame_width = 100,
@@ -536,14 +541,14 @@ server <- function(input, output, session) {
   )
   wizard$add_animation(
     suffix = "talk",
-    url = "assets/dungeonheroes/sprites/wizard_talk.png",
+    url = "dungeonheroes-assets/sprites/wizard_talk.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
 
   mushroom_spirit <- game$add_sprite(
     name = "mushroom_spirit",
-    url = "assets/dungeonheroes/sprites/mushroom_spirit.png",
+    url = "dungeonheroes-assets/sprites/mushroom_spirit.png",
     x = 2850,
     y = 5850,
     frame_width = 32,
@@ -785,7 +790,7 @@ dungeonheroes_space_client_actions <- function(hero_attack_cooldown, enemy_specs
           "if (!document.getElementById('mushroom-spirit-alert-style')) { ",
           "var style = document.createElement('style'); ",
           "style.id = 'mushroom-spirit-alert-style'; ",
-          "style.textContent = '@keyframes mushroomSpiritAlert { from { background-position: 0 0; } to { background-position: -448px 0; } } .mushroom-spirit-alert-animation { width: 32px; height: 32px; margin: 0 auto; background-image: url(\"assets/dungeonheroes/sprites/mushroom_spirit.png\"); background-repeat: no-repeat; animation: mushroomSpiritAlert 1s steps(14) infinite; image-rendering: pixelated; }'; ",
+          "style.textContent = '@keyframes mushroomSpiritAlert { from { background-position: 0 0; } to { background-position: -448px 0; } } .mushroom-spirit-alert-animation { width: 32px; height: 32px; margin: 0 auto; background-image: url(\"dungeonheroes-assets/sprites/mushroom_spirit.png\"); background-repeat: no-repeat; animation: mushroomSpiritAlert 1s steps(14) infinite; image-rendering: pixelated; }'; ",
           "document.head.appendChild(style); ",
           "} ",
           "swal({ ",
