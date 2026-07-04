@@ -1,11 +1,6 @@
 library(shiny)
 library(shinyphaser)
 
-shiny::addResourcePath(
-  prefix = "assets",
-  directoryPath = normalizePath("assets", mustWork = TRUE)
-)
-
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
