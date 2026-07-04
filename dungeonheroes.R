@@ -2,13 +2,20 @@ library(shinyphaser)
 library(shinyalert)
 
 game <- PhaserGame$new(width = 1600, height = 800)
+app_file <- sys.frame(1)$ofile
+if (is.null(app_file)) {
+  app_file <- "dungeonheroes.R"
+}
+app_dir <- normalizePath(dirname(app_file), mustWork = TRUE)
+assets_dir <- file.path(app_dir, "assets")
+shiny::addResourcePath("assets", assets_dir)
 map_tile_size <- 100
 map_tile_width <- 32
 map_tile_height <- 64
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
-dungeonheroes_version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
+dungeonheroes_version <- read.dcf(file.path(app_dir, "DESCRIPTION"), fields = "Version")[[1]]
 
 ui <- shiny::tagList(
   game$use_phaser()
@@ -16,8 +23,6 @@ ui <- shiny::tagList(
 
 server <- function(input, output, session) {
   
-  shiny::addResourcePath("assets", "assets")
-
   skeleton_specs <- list(
     list(name = "skeleton", x = 2400, y = 1200, hit_points = 3, damage = 8),
     list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
