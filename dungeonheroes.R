@@ -266,7 +266,10 @@ server <- function(input, output, session) {
       "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_2.png",
       "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_3.png",
       "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_4.png",
-      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_5.png"
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_5.png",
+      "dungeonheroes-assets/terrain/ms/ms_ground_1.png",
+      "dungeonheroes-assets/terrain/ms/ms_ground_2.png",
+      "dungeonheroes-assets/terrain/ms/ms_grass_ground.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
@@ -289,7 +292,10 @@ server <- function(input, output, session) {
       "mushroom_swamps_grass_2",
       "mushroom_swamps_grass_3",
       "mushroom_swamps_grass_4",
-      "mushroom_swamps_grass_5"
+      "mushroom_swamps_grass_5",
+      "ms_ground_1",
+      "ms_ground_2",
+      "ms_grass_ground"
     ),
     layer_name = "terrain"
   )
