@@ -484,7 +484,13 @@ server <- function(input, output, session) {
           type = "info",
           callbackR = function(value) shinyalert::shinyalert(
             title = "There is a good spirit waiting to be saved!",
-            type = "info"
+            text = paste0(
+              "<img src='dungeonheroes-assets/sprites/mushroom_spirit_alert.png' ",
+              "alt='Mushroom spirit' ",
+              "style='width:128px;height:128px;image-rendering:pixelated;'>"
+            ),
+            type = "",
+            html = TRUE
           )
         )
         return(invisible(NULL))
