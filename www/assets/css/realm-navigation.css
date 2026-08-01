@@ -1,4 +1,5 @@
-#realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; background:transparent; }
-.realm-destination { position:absolute; transform:translate(-50%,-50%); width:230px; height:64px; border:0; background:transparent; color:transparent; cursor:pointer; }
-.realm-destination:focus { outline:3px solid #fff; }
-.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+#realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; background:transparent; font-family:Georgia,serif; }
+.realm-destination { position:absolute; z-index:9001; transform:translate(-50%,-50%); min-width:190px; padding:14px 20px; border:2px solid #edce84; border-radius:8px; background:#251d17; color:#fff; box-shadow:0 0 25px #000; text-align:center; text-decoration:none; cursor:pointer; }
+.realm-destination strong,.realm-destination span { display:block; }
+.realm-destination span { margin-top:4px; color:#edce84; font:14px sans-serif; }
+.realm-destination:hover,.realm-destination:focus { outline:3px solid #fff; transform:translate(-50%,-50%) scale(1.05); }

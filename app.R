@@ -23,7 +23,11 @@ scene_games <- list(
 )
 
 requested_scene <- function(query_string) {
-  query <- shiny::parseQueryString(if (is.null(query_string)) "" else query_string)
+  query_string <- if (is.null(query_string)) "" else query_string
+  if (nzchar(query_string) && !startsWith(query_string, "?")) {
+    query_string <- paste0("?", query_string)
+  }
+  query <- shiny::parseQueryString(query_string)
   scene <- if (is.null(query$realm)) "world_map" else query$realm
   if (!scene %in% names(scene_games)) "world_map" else scene
 }

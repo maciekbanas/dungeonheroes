@@ -13,8 +13,7 @@ realm_navigation_ui <- function() {
       `aria-label` = "World map. The hero is at Mushroom Swamps.",
       realm_destination("mushroom-swamps", "Mushroom Swamps", 31, 61),
       realm_destination("magma-hills", "Magma Hills", 72, 31)
-    ),
-    htmltools::tags$script(src = "dungeonheroes-assets/js/realm-navigation.js")
+    )
   )
 }
 
@@ -26,7 +25,8 @@ realm_destination <- function(id, label, left, top) {
     href = sprintf("?realm=%s", realm_name),
     style = sprintf("left:%s%%;top:%s%%", left, top),
     `aria-label` = sprintf("Enter %s", label),
-    htmltools::tags$span(class = "visually-hidden", label)
+    htmltools::tags$strong(label),
+    htmltools::tags$span("Enter realm")
   )
 }
 
