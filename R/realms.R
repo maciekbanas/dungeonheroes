@@ -80,7 +80,6 @@ add_realm_navigation <- function(game) {
     x = 800,
     y = 400
   )
-  world_map$set_scale(8)
   world_map$set_scroll_factor(0)
   world_map$set_depth(1000)
 
