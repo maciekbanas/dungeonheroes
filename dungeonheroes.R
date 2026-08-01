@@ -1,49 +1,123 @@
+library(shiny)
 library(shinyphaser)
-library(shinyalert)
+
+shiny::addResourcePath(
+  prefix = "dungeonheroes-assets",
+  directoryPath = normalizePath("www/assets", mustWork = TRUE)
+)
 
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
-map_tile_height <- 16
+map_tile_height <- 64
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
 shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 dungeonheroes_version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
 
 ui <- shiny::tagList(
-  game$use_phaser()
+  htmltools::tags$style(htmltools::HTML("
+    @keyframes dungeonheroes-skeleton-loader {
+      from { background-position: 0 0; }
+      to { background-position: -800px 0; }
+    }
+
+    #dungeonheroes_loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: center;
+      justify-content: center;
+      background: #111827;
+      color: #f9fafb;
+      font: 24px sans-serif;
+    }
+
+    #dungeonheroes_loader .skeleton_loader_sprite {
+      width: 100px;
+      height: 100px;
+      background-image: url('dungeonheroes-assets/sprites/skeleton_idle.png');
+      background-repeat: no-repeat;
+      animation: dungeonheroes-skeleton-loader 1s steps(8) infinite;
+      image-rendering: pixelated;
+    }
+  ")),
+  htmltools::tags$div(
+    id = "dungeonheroes_loader",
+    htmltools::tags$div(class = "skeleton_loader_sprite"),
+    htmltools::tags$div("Loading dungeon heroes...")
+  ),
+  game$use_phaser(),
+  htmltools::tags$script(htmltools::HTML("
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var loader = document.getElementById('dungeonheroes_loader');
+        if (loader) loader.style.display = 'none';
+      }, 1200);
+    });
+  "))
 )
 
 server <- function(input, output, session) {
 
-  shiny::addResourcePath("assets", "assets")
-
-  skeleton_specs <- list(
-    list(name = "skeleton", x = 2400, y = 1200, hit_points = 3, damage = 8),
-    list(name = "skeleton_2", x = 2800, y = 1400, hit_points = 4, damage = 12)
+  enemy_specs <- list(
+    list(name = "mushroom_man_1", type = "mushroom_man", x = 1250, y = 1550, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_2", type = "mushroom_man", x = 850, y = 2150, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_3", type = "mushroom_man", x = 1750, y = 2450, hit_points = 5, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_4", type = "mushroom_man", x = 2650, y = 2350, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_5", type = "mushroom_man", x = 450, y = 3250, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_6", type = "mushroom_man", x = 1450, y = 3850, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_7", type = "mushroom_man", x = 2450, y = 3950, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_8", type = "mushroom_man", x = 2850, y = 4550, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_9", type = "mushroom_man", x = 950, y = 5250, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_10", type = "mushroom_man", x = 2150, y = 5550, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_11", type = "mushroom_man", x = 550, y = 1350, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_12", type = "mushroom_man", x = 1850, y = 1550, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_13", type = "mushroom_man", x = 1050, y = 2550, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_14", type = "mushroom_man", x = 1650, y = 2850, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_15", type = "mushroom_man", x = 2350, y = 3150, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_16", type = "mushroom_man", x = 3050, y = 3450, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_17", type = "mushroom_man", x = 850, y = 4050, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_18", type = "mushroom_man", x = 1550, y = 4650, hit_points = 6, damage = 5, motion = "walk"),
+    list(name = "mushroom_man_19", type = "mushroom_man", x = 950, y = 5550, hit_points = 5, damage = 4, motion = "walk"),
+    list(name = "mushroom_man_20", type = "mushroom_man", x = 3050, y = 5550, hit_points = 6, damage = 5, motion = "walk")
   )
-  skeleton_names <- vapply(skeleton_specs, `[[`, character(1), "name")
+  enemy_names <- vapply(enemy_specs, `[[`, character(1), "name")
+
+  wizard_laugh_sound <- game$add_sound(
+    name = "wizard_laugh",
+    url = "dungeonheroes-assets/sounds/wizard_laugh.wav"
+  )
+
+  hero_attack_sound <- game$add_sound(
+    name = "hero_attack",
+    url = "dungeonheroes-assets/sounds/attack.wav"
+  )
 
   max_life_points <- 100
   life_points <- max_life_points
-  skeleton_max_hit_points <- stats::setNames(
-    vapply(skeleton_specs, `[[`, numeric(1), "hit_points"),
-    skeleton_names
+  enemy_max_hit_points <- stats::setNames(
+    vapply(enemy_specs, `[[`, numeric(1), "hit_points"),
+    enemy_names
   )
-  skeleton_hit_points <- skeleton_max_hit_points
-  skeleton_is_alive <- stats::setNames(rep(TRUE, length(skeleton_names)), skeleton_names)
-  skeleton_last_attack_time <- stats::setNames(
-    rep(as.numeric(Sys.time()) - 2, length(skeleton_names)),
-    skeleton_names
+  enemy_hit_points <- enemy_max_hit_points
+  enemy_is_alive <- stats::setNames(rep(TRUE, length(enemy_names)), enemy_names)
+  enemy_last_attack_time <- stats::setNames(
+    rep(as.numeric(Sys.time()) - 2, length(enemy_names)),
+    enemy_names
   )
-  skeleton_damage <- stats::setNames(
-    vapply(skeleton_specs, `[[`, numeric(1), "damage"),
-    skeleton_names
+  enemy_damage <- stats::setNames(
+    vapply(enemy_specs, `[[`, numeric(1), "damage"),
+    enemy_names
   )
-  skeleton_attack_cooldown <- 2
-  skeleton_in_range <- NULL
-  wizard_in_range <- FALSE
+  enemy_attack_cooldown <- 2
+  enemy_in_range <- NULL
   sword_in_range <- FALSE
+  wizard_in_range <- FALSE
+  berry_in_range <- NULL
   has_sword <- FALSE
   hero_last_attack_time <- as.numeric(Sys.time()) - 1
   hero_attack_cooldown <- 0.75
@@ -54,31 +128,60 @@ server <- function(input, output, session) {
   health_bar_segment_height <- 14
   health_bar_segment_gap <- 3
   game_over_shown <- FALSE
-  wizard_is_talking <- FALSE
-  defeated_skeleton_count <- 0
+  defeated_enemy_count <- 0
 
-  show_intro_alerts <- function() {
+  session$onFlushed(function() {
     shinyalert::shinyalert(
-      title = "Welcome to the game, dungeon hero!",
-      type = "success",
-      callbackR = function(value) {
-        shinyalert::shinyalert(
-          title = "Use arrows to move and space to attack or interact",
-          type = "info"
-        )
-      }
+      title = "Use Space to attack and interact",
+      type = "info"
     )
+  }, once = TRUE)
+
+  enemy_animation_key <- function(enemy_name, suffix) {
+    paste(enemy_name, suffix, sep = "_")
   }
 
-  session$onFlushed(show_intro_alerts, once = TRUE)
-
-  skeleton_animation_key <- function(skeleton_name, suffix) {
-    paste(skeleton_name, suffix, sep = "_")
+  format_enemy_label <- function(enemy_name) {
+    gsub("_", " ", enemy_name)
   }
 
-  format_skeleton_label <- function(skeleton_name) {
-    gsub("_", " ", skeleton_name)
-  }
+  enemy_type <- stats::setNames(
+    vapply(enemy_specs, `[[`, character(1), "type"),
+    enemy_names
+  )
+  enemy_motion <- stats::setNames(
+    vapply(enemy_specs, `[[`, character(1), "motion"),
+    enemy_names
+  )
+  mushroom_enemy_names <- enemy_names[enemy_type == "mushroom_man"]
+  mushroom_sight_range <- 500
+  mushroom_approach_speed_multiplier <- 1.35
+  mushroom_approach_distance_multiplier <- 2
+  # Check every frame so noticing the hero never waits on the movement timer.
+  mushroom_reaction_check_interval <- 16
+  mushroom_alert_duration <- 1200
+  mushroom_motion_specs <- list(
+    mushroom_man_1 = list(speed = 42, distance = 70, lag = 0.0, interval = 1300),
+    mushroom_man_2 = list(speed = 48, distance = 95, lag = 0.2, interval = 1700),
+    mushroom_man_3 = list(speed = 54, distance = 80, lag = 0.4, interval = 1500),
+    mushroom_man_4 = list(speed = 60, distance = 110, lag = 0.1, interval = 2100),
+    mushroom_man_5 = list(speed = 46, distance = 125, lag = 0.3, interval = 1900),
+    mushroom_man_6 = list(speed = 52, distance = 85, lag = 0.5, interval = 1600),
+    mushroom_man_7 = list(speed = 58, distance = 100, lag = 0.6, interval = 2300),
+    mushroom_man_8 = list(speed = 44, distance = 115, lag = 0.2, interval = 1800),
+    mushroom_man_9 = list(speed = 56, distance = 75, lag = 0.4, interval = 1400),
+    mushroom_man_10 = list(speed = 50, distance = 105, lag = 0.7, interval = 2200),
+    mushroom_man_11 = list(speed = 43, distance = 70, lag = 0.1, interval = 1350),
+    mushroom_man_12 = list(speed = 49, distance = 95, lag = 0.3, interval = 1750),
+    mushroom_man_13 = list(speed = 55, distance = 80, lag = 0.5, interval = 1550),
+    mushroom_man_14 = list(speed = 61, distance = 110, lag = 0.2, interval = 2150),
+    mushroom_man_15 = list(speed = 47, distance = 125, lag = 0.4, interval = 1950),
+    mushroom_man_16 = list(speed = 53, distance = 85, lag = 0.6, interval = 1650),
+    mushroom_man_17 = list(speed = 59, distance = 100, lag = 0.7, interval = 2350),
+    mushroom_man_18 = list(speed = 45, distance = 115, lag = 0.3, interval = 1850),
+    mushroom_man_19 = list(speed = 57, distance = 75, lag = 0.5, interval = 1450),
+    mushroom_man_20 = list(speed = 51, distance = 105, lag = 0.8, interval = 2250)
+  )
 
   set_combat_status <- function(message) {
     combat_status_text$set(message)
@@ -97,30 +200,22 @@ server <- function(input, output, session) {
   }
 
   update_enemy_status <- function() {
-    living_skeleton_names <- skeleton_names[skeleton_is_alive]
-    if (length(living_skeleton_names) == 0) {
+    living_enemy_names <- enemy_names[enemy_is_alive]
+    if (length(living_enemy_names) == 0) {
       enemy_status_text$set("enemies: defeated")
       return()
     }
 
-    enemy_summaries <- vapply(living_skeleton_names, function(skeleton_name) {
+    enemy_summaries <- vapply(living_enemy_names, function(enemy_name) {
       sprintf(
         "%s %d/%d",
-        format_skeleton_label(skeleton_name),
-        skeleton_hit_points[[skeleton_name]],
-        skeleton_max_hit_points[[skeleton_name]]
+        format_enemy_label(enemy_name),
+        enemy_hit_points[[enemy_name]],
+        enemy_max_hit_points[[enemy_name]]
       )
     }, character(1))
 
     enemy_status_text$set(paste("enemies:", paste(enemy_summaries, collapse = " | ")))
-  }
-
-  nearest_living_skeleton <- function() {
-    if (!is.null(skeleton_in_range) && isTRUE(skeleton_is_alive[[skeleton_in_range]])) {
-      return(skeleton_in_range)
-    }
-
-    NULL
   }
 
   hero_idle_animation <- function() {
@@ -153,20 +248,58 @@ server <- function(input, output, session) {
 
   game$add_map(
     map_key = "mushroom_swamps",
-    map_url = "assets/maps/mushroom_swamps.json",
+    map_url = "dungeonheroes-assets/maps/mushroom_swamps.json",
     tileset_urls = c(
-      "assets/terrain/mushroom_swamps/mushroom_swamps_grass_1.png",
-      "assets/terrain/mushroom_swamps/mushroom_swamps_swamp_1.png"
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_1.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_swamp_1.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_left_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_left_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_left.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_top_bottom_right.png",
+      "dungeonheroes-assets/terrain/ms/ms_bank_left_right.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_2.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_3.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_4.png",
+      "dungeonheroes-assets/terrain/ms/mushroom_swamps_grass_5.png"
     ),
     tileset_names = c(
       "mushroom_swamps_grass_1",
-      "mushroom_swamps_swamp_1"
+      "mushroom_swamps_swamp_1",
+      "mushroom_swamps_swamp_bank_bottom",
+      "mushroom_swamps_swamp_bank_bottom_right",
+      "mushroom_swamps_swamp_bank_left",
+      "mushroom_swamps_swamp_bank_left_bottom",
+      "mushroom_swamps_swamp_bank_left_bottom_right",
+      "mushroom_swamps_swamp_bank_right",
+      "mushroom_swamps_swamp_bank_top_bottom_left_right",
+      "mushroom_swamps_swamp_bank_top_left",
+      "mushroom_swamps_swamp_bank_top_left_right",
+      "mushroom_swamps_swamp_bank_top_right",
+      "mushroom_swamps_swamp_bank_top",
+      "mushroom_swamps_swamp_bank_top_bottom",
+      "mushroom_swamps_swamp_bank_top_bottom_left",
+      "mushroom_swamps_swamp_bank_top_bottom_right",
+      "mushroom_swamps_swamp_bank_left_right",
+      "mushroom_swamps_grass_2",
+      "mushroom_swamps_grass_3",
+      "mushroom_swamps_grass_4",
+      "mushroom_swamps_grass_5"
     ),
     layer_name = "terrain"
   )
   hero <- game$add_sprite(
     name = "hero",
-    url = "assets/sprites/hero_idle.png",
+    url = "dungeonheroes-assets/sprites/hero_idle.png",
     x = 100,
     y = 100,
     frame_width = 100,
@@ -176,104 +309,163 @@ server <- function(input, output, session) {
   )
   hero$add_player_controls()
   hero$follow_camera()
+  hero$set_depth(10)
   Sys.sleep(0.1)
-  game$enable_terrain_collision("hero")  
+  game$enable_terrain_collision("hero")
   hero$add_animation(
     suffix = "move_down",
-    url = "assets/sprites/hero_move_down.png",
+    url = "dungeonheroes-assets/sprites/hero_move_down.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_up",
-    url = "assets/sprites/hero_move_up.png",
+    url = "dungeonheroes-assets/sprites/hero_move_up.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_left",
-    url = "assets/sprites/hero_move_left.png",
+    url = "dungeonheroes-assets/sprites/hero_move_left.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "move_right",
-    url = "assets/sprites/hero_move_right.png",
+    url = "dungeonheroes-assets/sprites/hero_move_right.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "attack",
-    url = "assets/sprites/hero_attack.png",
+    url = "dungeonheroes-assets/sprites/hero_attack.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
 
   hero$add_animation(
     suffix = "sword_idle",
-    url = "assets/sprites/hero_sword_idle.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_idle.png",
     frame_width = 100, frame_height = 100,
     frame_count = 7, frame_rate = 4
   )
   hero$add_animation(
     suffix = "sword_move_down",
-    url = "assets/sprites/hero_sword_move_down.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_down.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_up",
-    url = "assets/sprites/hero_sword_move_up.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_up.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_left",
-    url = "assets/sprites/hero_sword_move_left.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_left.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_move_right",
-    url = "assets/sprites/hero_sword_move_right.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_move_right.png",
     frame_width = 100, frame_height = 100,
     frame_count = 4, frame_rate = 8
   )
   hero$add_animation(
     suffix = "sword_attack",
-    url = "assets/sprites/hero_sword_attack.png",
+    url = "dungeonheroes-assets/sprites/hero_sword_attack.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
+  lapply(c("left", "right"), function(direction) {
+    hero$add_animation(
+      suffix = paste0("sword_attack_", direction),
+      url = sprintf("dungeonheroes-assets/sprites/hero_sword_attack_%s.png", direction),
+      frame_width = 100, frame_height = 100,
+      frame_count = 2, frame_rate = 4
+    )
+  })
 
-  skeletons <- stats::setNames(lapply(skeleton_specs, function(spec) {
-    skel <- game$add_sprite(
+  enemies <- stats::setNames(lapply(enemy_specs, function(spec) {
+    enemy <- game$add_sprite(
       name = spec$name,
-      url = "assets/sprites/skeleton_idle.png",
+      url = "dungeonheroes-assets/sprites/mushroom_man_idle.png",
       x = spec$x,
       y = spec$y,
       frame_width = 100,
       frame_height = 100,
       frame_count = 8,
-      frame_rate = 4
+      frame_rate = 8
     )
 
-    skel$add_animation(
+    lapply(c("down", "left", "right", "up"), function(direction) {
+      enemy$add_animation(
+        suffix = paste0("move_", direction),
+        url = sprintf("dungeonheroes-assets/sprites/mushroom_man_walk_%s.png", direction),
+        frame_width = 100, frame_height = 100,
+        frame_count = 12, frame_rate = 8
+      )
+    })
+
+    enemy$add_animation(
       suffix = "attack",
-      url = "assets/sprites/skeleton_attack.png",
+      url = "dungeonheroes-assets/sprites/mushroom_man_attack.png",
       frame_width = 100, frame_height = 100,
-      frame_count = 2, frame_rate = 4
+      frame_count = 6, frame_rate = 6
+    )
+    lapply(c("left", "right"), function(direction) {
+      enemy$add_animation(
+        suffix = paste0("attack_", direction),
+        url = sprintf("dungeonheroes-assets/sprites/mushroom_man_attack_%s.png", direction),
+        frame_width = 100, frame_height = 100,
+        frame_count = 6, frame_rate = 6
+      )
+    })
+    enemy$add_animation(
+      suffix = "destroy",
+      url = "dungeonheroes-assets/sprites/mushroom_man_destroy.png",
+      frame_width = 100, frame_height = 100,
+      frame_count = 6, frame_rate = 8
     )
 
-    skel
-  }), skeleton_names)
+    enemy
+  }), enemy_names)
 
-  game$add_control(
-    "Space",
-    action = function() {
-      if (life_points <= 0) {
-        set_combat_status("You are defeated and cannot fight.")
-        return()
+  lapply(enemy_names, function(enemy_name) {
+    game$enable_terrain_collision(enemy_name)
+  })
+
+  lapply(mushroom_enemy_names, function(enemy_name) {
+    motion_spec <- mushroom_motion_specs[[enemy_name]]
+    enemies[[enemy_name]]$start_approach_on_sight(
+      target_name = "hero",
+      sight_range = mushroom_sight_range,
+      speed = motion_spec$speed * mushroom_approach_speed_multiplier,
+      distance = motion_spec$distance * mushroom_approach_distance_multiplier,
+      check_interval = mushroom_reaction_check_interval,
+      alert_duration = mushroom_alert_duration,
+      wander_interval = motion_spec$interval
+    )
+  })
+
+  handle_space <- function(event) {
+      if (life_points <= 0) return(invisible(NULL))
+
+      if (!is.null(berry_in_range) && isTRUE(berry_is_available[[berry_in_range]])) {
+        consumed_berry <- berry_in_range
+        restored_life <- min(10, max_life_points - life_points)
+        life_points <<- min(max_life_points, life_points + 10)
+        berry_is_available[[consumed_berry]] <<- FALSE
+        berry_in_range <<- NULL
+        berries[[consumed_berry]]$destroy()
+        update_life_points()
+        set_combat_status(sprintf(
+          "You ate berries and restored %d life. Life: %d/%d",
+          restored_life, life_points, max_life_points
+        ))
+        return(invisible(NULL))
       }
 
       if (sword_in_range && !has_sword) {
@@ -281,59 +473,64 @@ server <- function(input, output, session) {
         sword_in_range <<- FALSE
         sword$destroy()
         inventory_text$set("weapon: sword")
-        set_combat_status("You equipped the sword. Your attacks are stronger.")
-        play_hero_idle_animation()
-      } else {
-        current_time <- as.numeric(Sys.time())
-        if ((current_time - hero_last_attack_time) < hero_attack_cooldown) {
-          set_combat_status("You need a moment before attacking again.")
-          return()
-        }
-
-        hero_last_attack_time <<- current_time
-
-        if (has_sword) {
-          play_hero_timed_animation("hero_sword_attack", duration = 500)
-        } else {
-          play_hero_timed_animation("hero_attack", duration = 500)
-        }
-
-        target_name <- nearest_living_skeleton()
-        if (!is.null(target_name)) {
-          attack_damage <- if (has_sword) hero_sword_damage else hero_fist_damage
-          skeleton_hit_points[target_name] <<- max(
-            skeleton_hit_points[[target_name]] - attack_damage,
-            0
-          )
-
-          if (skeleton_hit_points[[target_name]] <= 0) {
-            skeleton_is_alive[target_name] <<- FALSE
-            skeletons[[target_name]]$destroy()
-            skeleton_in_range <<- NULL
-            defeated_skeleton_count <<- defeated_skeleton_count + 1
-            set_combat_status(sprintf(
-              "You defeated %s (%d/%d defeated).",
-              format_skeleton_label(target_name),
-              defeated_skeleton_count,
-              length(skeleton_names)
-            ))
-          } else {
-            set_combat_status(sprintf(
-              "You hit %s for %d damage.",
-              format_skeleton_label(target_name),
-              attack_damage
-            ))
-          }
-          update_enemy_status()
-        } else {
-          set_combat_status("Your attack hits only air.")
-        }
+        hero$play_animation("hero_sword")
+        set_combat_status("You picked up the sword.")
+        return(invisible(NULL))
       }
+
       if (wizard_in_range) {
-        show_wizard_window(game, input, has_sword)
+        shinyalert::shinyalert(
+          title = "Dear, oh dear. What are you doing here in these dark forests, lad?",
+          type = "info",
+          callbackR = function(value) shinyalert::shinyalert(
+            title = "There is a good spirit waiting to be saved!",
+            text = paste0(
+              "<img src='dungeonheroes-assets/sprites/mushroom_spirit_alert.png' ",
+              "alt='Mushroom spirit' ",
+              "style='width:128px;height:128px;image-rendering:pixelated;'>"
+            ),
+            type = "",
+            html = TRUE
+          )
+        )
+        return(invisible(NULL))
       }
-    },
-    input
+
+      now <- as.numeric(Sys.time())
+      if (now - hero_last_attack_time < hero_attack_cooldown) return(invisible(NULL))
+      hero_last_attack_time <<- now
+      hero_attack_sound$play()
+
+      if (!is.null(enemy_in_range) && isTRUE(enemy_is_alive[[enemy_in_range]])) {
+        damage <- if (has_sword) hero_sword_damage else hero_fist_damage
+        hero_animation <- if (has_sword) "hero_sword_attack" else "hero_attack"
+        enemy_hit_points[[enemy_in_range]] <<- max(0, enemy_hit_points[[enemy_in_range]] - damage)
+        play_hero_timed_animation(hero_animation)
+        set_combat_status(sprintf(
+          "You hit %s for %d. Enemy life: %d/%d",
+          format_enemy_label(enemy_in_range), damage,
+          enemy_hit_points[[enemy_in_range]], enemy_max_hit_points[[enemy_in_range]]
+        ))
+
+        if (enemy_hit_points[[enemy_in_range]] <= 0) {
+          defeated <- enemy_in_range
+          enemy_is_alive[[defeated]] <<- FALSE
+          defeated_enemy_count <<- defeated_enemy_count + 1
+          enemies[[defeated]]$play_animation(enemy_animation_key(defeated, "destroy"), duration = 750)
+          later::later(function() enemies[[defeated]]$destroy(), delay = 0.75)
+          enemy_in_range <<- NULL
+        }
+        update_enemy_status()
+      } else {
+        play_hero_timed_animation(if (has_sword) "hero_sword_attack" else "hero_attack")
+      }
+
+  }
+
+  game$add_control(
+    "Space",
+    server_action = handle_space,
+    input = input
   )
 
   inventory_text <- game$add_text(
@@ -376,7 +573,7 @@ server <- function(input, output, session) {
   )
   enemy_status_text$set_scroll_factor(0)
   combat_status_text <- game$add_text(
-    text = "combat: find a weapon, then face the skeletons",
+    text = "combat: find a weapon, then face the enemies",
     id = "combat_status",
     x = 800,
     y = 660
@@ -384,41 +581,93 @@ server <- function(input, output, session) {
   combat_status_text$set_scroll_factor(0)
   update_enemy_status()
   version_text <- game$add_text(
-    text = sprintf("dungeonheroes v%s | shinyphaser v%s", dungeonheroes_version, shinyphaser_version),
+    text = sprintf("shinyphaser v%s", shinyphaser_version),
     id = "game_version",
     x = 50,
     y = 660
   )
   version_text$set_scroll_factor(0)
 
+  dead_tree_bottom <- game$add_static_sprite(
+    name = "dead_tree_1_bottom",
+    url = "dungeonheroes-assets/terrain/ms/dead_tree_1_bottom.png",
+    x = 550,
+    y = 650
+  )
+  dead_tree_bottom$set_depth(10)
+
+  dead_tree_top <- game$add_image(
+    name = "dead_tree_1_top",
+    url = "dungeonheroes-assets/terrain/ms/dead_tree_1_top.png",
+    x = 550,
+    y = 650 - map_tile_size
+  )
+  dead_tree_top$set_depth(20)
+
+  game$add_collider("hero", "dead_tree_1_bottom")
+
   sword <- game$add_static_sprite(
     name = "sword",
-    url = "assets/weapons/sword.png",
+    url = "dungeonheroes-assets/weapons/sword.png",
     x = 300,
     y = 300
   )
   game$add_overlap(
-    object_one = "hero",
-    object_two = "sword",
-    callback_fun = function(evt) {
-      if (!has_sword) {
-        sword_in_range <<- TRUE
-      }
-    },
-    input = input
+    "hero", "sword", input = input,
+    server_action = function(event) sword_in_range <<- TRUE
   )
   game$add_overlap_end(
-    object_one = "hero",
-    object_two = "sword",
-    callback_fun = function(evt) {
-      sword_in_range <<- FALSE
-    },
-    input = input
+    "hero", "sword", input = input, session = session,
+    server_action = function(event) sword_in_range <<- FALSE
   )
+
+  berry_specs <- list(
+    berries_1 = c(x = 650, y = 650),
+    berries_2 = c(x = 1450, y = 1650),
+    berries_3 = c(x = 2550, y = 2250),
+    berries_4 = c(x = 1150, y = 3150),
+    berries_5 = c(x = 2050, y = 3850),
+    berries_6 = c(x = 2850, y = 4750),
+    berries_7 = c(x = 450, y = 5450),
+    berries_8 = c(x = 1550, y = 5550),
+    berries_9 = c(x = 2450, y = 5850),
+    berries_10 = c(x = 2950, y = 6350)
+  )
+  berry_is_available <- stats::setNames(
+    rep(TRUE, length(berry_specs)),
+    names(berry_specs)
+  )
+  berries <- lapply(names(berry_specs), function(berry_name) {
+    position <- berry_specs[[berry_name]]
+    game$add_static_sprite(
+      name = berry_name,
+      url = "dungeonheroes-assets/perks/berries.png",
+      x = position[["x"]],
+      y = position[["y"]]
+    )
+  })
+  names(berries) <- names(berry_specs)
+
+  lapply(names(berries), function(berry_name) {
+    force(berry_name)
+    game$add_overlap(
+      "hero", berry_name, input = input,
+      server_action = function(event) {
+        if (isTRUE(berry_is_available[[berry_name]])) berry_in_range <<- berry_name
+      }
+    )
+    game$add_overlap_end(
+      "hero", berry_name, input = input, session = session,
+      server_action = function(event) {
+        if (identical(berry_in_range, berry_name)) berry_in_range <<- NULL
+      }
+    )
+  })
+
 
   wizard <- game$add_sprite(
     name = "wizard",
-    url = "assets/sprites/wizard_idle.png",
+    url = "dungeonheroes-assets/sprites/wizard_idle.png",
     x = 1600,
     y = 800,
     frame_width = 100,
@@ -428,9 +677,20 @@ server <- function(input, output, session) {
   )
   wizard$add_animation(
     suffix = "talk",
-    url = "assets/sprites/wizard_talk.png",
+    url = "dungeonheroes-assets/sprites/wizard_talk.png",
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
+  )
+
+  mushroom_spirit <- game$add_sprite(
+    name = "mushroom_spirit",
+    url = "dungeonheroes-assets/sprites/mushroom_spirit.png",
+    x = 2850,
+    y = 5850,
+    frame_width = 32,
+    frame_height = 32,
+    frame_count = 14,
+    frame_rate = 8
   )
 
   talk_bubble_text <- game$add_text(
@@ -443,98 +703,105 @@ server <- function(input, output, session) {
   game$add_overlap(
     object_one = "hero",
     object_two = "wizard",
-    callback_fun = function(evt) {
+    input = input,
+    browser_action = browser_actions({
       talk_bubble_text$show()
-      wizard_in_range <<- TRUE
-      if (!wizard_is_talking) {
-        wizard_is_talking <<- TRUE
-        wizard$play_animation("wizard_talk", 2e3)
-      }
-    },
-    input = input
+      wizard$play_animation("talk", duration = 2000)
+      wizard_laugh_sound$play()
+    }),
+    server_action = function(event) wizard_in_range <<- TRUE
   )
   game$add_overlap_end(
     object_one = "hero",
     object_two = "wizard",
-    callback_fun = function(evt) {
+    input = input,
+    browser_action = browser_actions({
       talk_bubble_text$hide()
-      wizard_in_range <<- FALSE
-      wizard_is_talking <<- FALSE
-      wizard$play_animation("wizard_idle")
-    },
-    input = input
+      wizard$play_animation("idle")
+    }),
+    server_action = function(event) wizard_in_range <<- FALSE
   )
 
-  add_skeleton_handlers <- function(skeleton_name) {
-    force(skeleton_name)
+  game$add_overlap(
+    object_one = "hero",
+    object_two = "mushroom_spirit",
+    input = input,
+    browser_action = browser_actions(mushroom_spirit$destroy()),
+    server_action = function(event) {
+      shinyalert::shinyalert(
+        title = "Mushroom spirit saved!",
+        text = "The good spirit is safe. You win!",
+        type = "success",
+        closeOnClickOutside = FALSE,
+        showCancelButton = FALSE
+      )
+    }
+  )
+
+  add_enemy_handlers <- function(enemy_name) {
+    force(enemy_name)
 
     game$add_overlap(
       object_one = "hero",
-      object_two = skeleton_name,
-      callback_fun = function(evt) {
-        skeleton_in_range <<- skeleton_name
-        if (!isTRUE(skeleton_is_alive[[skeleton_name]])) {
-          return()
+      object_two = enemy_name,
+      input = input,
+      browser_action = browser_actions({
+        enemies[[enemy_name]]$stop_motion()
+        enemies[[enemy_name]]$play_animation(
+          enemy_animation_key(enemy_name, "attack"),
+          duration = enemy_attack_cooldown * 1000
+        )
+      }),
+      mode = "stay",
+      interval = enemy_attack_cooldown * 1000,
+      server_action = function(event) {
+        enemy_in_range <<- enemy_name
+        now <- as.numeric(Sys.time())
+        if (life_points <= 0 || !isTRUE(enemy_is_alive[[enemy_name]]) ||
+            now - enemy_last_attack_time[[enemy_name]] < enemy_attack_cooldown) {
+          return(invisible(NULL))
         }
 
-        current_time <- as.numeric(Sys.time())
-        if ((current_time - skeleton_last_attack_time[[skeleton_name]]) >= skeleton_attack_cooldown) {
-          skeleton_last_attack_time[skeleton_name] <<- current_time
-          skeletons[[skeleton_name]]$play_animation(
-            skeleton_animation_key(skeleton_name, "attack"),
-            duration = 350
+        enemy_last_attack_time[[enemy_name]] <<- now
+        life_points <<- max(0, life_points - enemy_damage[[enemy_name]])
+        set_combat_status(sprintf(
+          "%s hits you for %d. Life: %d/%d",
+          format_enemy_label(enemy_name), enemy_damage[[enemy_name]],
+          life_points, max_life_points
+        ))
+        update_life_points()
+
+        if (life_points <= 0 && !game_over_shown) {
+          game_over_shown <<- TRUE
+          shinyalert::shinyalert(
+            title = "Game over",
+            text = "Your life points reached 0.",
+            type = "error",
+            closeOnClickOutside = FALSE,
+            showCancelButton = FALSE
           )
-          damage <- skeleton_damage[[skeleton_name]]
-          life_points <<- max(life_points - damage, 0)
-          update_life_points()
-          set_combat_status(sprintf(
-            "%s strikes you for %d damage.",
-            format_skeleton_label(skeleton_name),
-            damage
-          ))
-          if (life_points <= 0 && !game_over_shown) {
-            game_over_shown <<- TRUE
-            shinyalert::shinyalert(
-              title = "Game Over",
-              text = "You have been defeated.",
-              type = "error"
-            )
-          }
         }
-      },
-      input = input
+      }
     )
 
     game$add_overlap_end(
       object_one = "hero",
-      object_two = skeleton_name,
-      callback_fun = function(evt) {
-        if (identical(skeleton_in_range, skeleton_name)) {
-          skeleton_in_range <<- NULL
-        }
-        if (isTRUE(skeleton_is_alive[[skeleton_name]])) {
-          skeletons[[skeleton_name]]$play_animation(skeleton_animation_key(skeleton_name, "idle"))
-        }
-      },
-      input = input
+      object_two = enemy_name,
+      # Release the forced attack without leaving a permanent forced-idle state.
+      browser_action = browser_actions(enemies[[enemy_name]]$play_animation(
+        enemy_animation_key(enemy_name, "idle"),
+        duration = 1
+      )),
+      input = input,
+      session = session,
+      server_action = function(event) {
+        if (identical(enemy_in_range, enemy_name)) enemy_in_range <<- NULL
+      }
     )
   }
 
-  lapply(skeleton_names, add_skeleton_handlers)
+  lapply(enemy_names, add_enemy_handlers)
 }
 
-show_wizard_window <- function(game, input, has_sword = FALSE) {
-  greeting <- if (has_sword) {
-    "You found the sword. The wizard believes you are ready for the next challenge."
-  } else {
-    "Welcome, brave hero! Find the sword before facing the deepest dungeon challenge."
-  }
-
-  shinyalert::shinyalert(
-    title = "Greetings from the Wizard",
-    text = greeting,
-    type = "info"
-  )
-}
 
 shiny::shinyApp(ui, server)
