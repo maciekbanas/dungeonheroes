@@ -11,6 +11,11 @@ realm_navigation_ui <- function() {
       id = "realm-map",
       tabindex = "0",
       `aria-label` = "World map. The hero is at Mushroom Swamps.",
+      htmltools::tags$img(
+        class = "world-map-art",
+        src = "dungeonheroes-assets/general/world_map.png",
+        alt = "Map of the Shattered Realms"
+      ),
       htmltools::tags$div(class = "map-title", "The Shattered Realms"),
       realm_destination("mushroom-swamps", "Mushroom Swamps", "Enter", 31, 61),
       realm_destination("magma-hills", "Magma Hills", "Travel", 72, 31),
@@ -21,16 +26,7 @@ realm_navigation_ui <- function() {
       ),
       htmltools::tags$p(class = "map-help", "Click a realm to travel. Press Enter to enter Mushroom Swamps.")
     ),
-    htmltools::tags$div(
-      id = "magma-realm",
-      `aria-label` = "Magma Hills",
-      htmltools::tags$div(class = "magma-title", "Magma Hills"),
-      htmltools::tags$div(class = "magma-help", "Click passable hill terrain to move. Lava is impassable."),
-      htmltools::tags$div(id = "magma-field", htmltools::tags$img(
-        id = "magma-hero", src = "dungeonheroes-assets/sprites/hero_idle.png", alt = "Hero"
-      ))
-    ),
-    htmltools::tags$button(id = "leave-realm", type = "button", "Leave realm"),
+    htmltools::tags$button(id = "leave-realm", type = "button", `aria-label` = "Return to world map"),
     htmltools::tags$script(src = "dungeonheroes-assets/js/realm-navigation.js")
   )
 }
