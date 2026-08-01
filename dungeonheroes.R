@@ -253,9 +253,8 @@ server <- function(input, output, session) {
     frame_rate = 4
   )
   enable_player_movement(game, hero)
-  hero$hide()
   navigation_objects <- add_realm_navigation(game)
-  initialize_realm_navigation(input, session, game, hero, navigation_objects)
+  initialize_realm_navigation(input, session, game, navigation_objects)
   hero$add_animation(
     suffix = "move_down",
     url = "dungeonheroes-assets/sprites/hero_move_down.png",

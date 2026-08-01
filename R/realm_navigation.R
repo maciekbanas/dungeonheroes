@@ -29,12 +29,11 @@ realm_destination <- function(id, label, left, top) {
   )
 }
 
-initialize_realm_navigation <- function(input, session, game, hero, navigation_objects) {
+initialize_realm_navigation <- function(input, session, game, navigation_objects) {
   loaded_realm_count <- 0L
 
   shiny::observeEvent(input$realm, {
     if (identical(input$realm, "world_map")) {
-      hero$hide()
       lapply(navigation_objects, function(object) object$show())
       return(invisible(NULL))
     }
@@ -48,7 +47,6 @@ initialize_realm_navigation <- function(input, session, game, hero, navigation_o
     Sys.sleep(0.1)
     game$enable_terrain_collision("hero")
     lapply(navigation_objects, function(object) object$hide())
-    hero$show()
 
     if (identical(input$realm, "mushroom_swamps")) {
       shinyalert::shinyalert(
