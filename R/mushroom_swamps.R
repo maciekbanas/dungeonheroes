@@ -1,70 +1,4 @@
-library(shiny)
-library(shinyphaser)
-
-invisible(lapply(sort(list.files("R", pattern = "[.]R$", full.names = TRUE)), source))
-
-shiny::addResourcePath(
-  prefix = "dungeonheroes-assets",
-  directoryPath = normalizePath("www/assets", mustWork = TRUE)
-)
-
-game <- PhaserGame$new(width = 1600, height = 800)
-map_tile_size <- 100
-map_tile_width <- 32
-map_tile_height <- 64
-world_width <- map_tile_width * map_tile_size
-world_height <- map_tile_height * map_tile_size
-shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
-dungeonheroes_version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
-
-ui <- shiny::tagList(
-  realm_navigation_ui(),
-  htmltools::tags$style(htmltools::HTML("
-    @keyframes dungeonheroes-skeleton-loader {
-      from { background-position: 0 0; }
-      to { background-position: -800px 0; }
-    }
-
-    #dungeonheroes_loader {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-      align-items: center;
-      justify-content: center;
-      background: #111827;
-      color: #f9fafb;
-      font: 24px sans-serif;
-    }
-
-    #dungeonheroes_loader .skeleton_loader_sprite {
-      width: 100px;
-      height: 100px;
-      background-image: url('dungeonheroes-assets/sprites/skeleton_idle.png');
-      background-repeat: no-repeat;
-      animation: dungeonheroes-skeleton-loader 1s steps(8) infinite;
-      image-rendering: pixelated;
-    }
-  ")),
-  htmltools::tags$div(
-    id = "dungeonheroes_loader",
-    htmltools::tags$div(class = "skeleton_loader_sprite"),
-    htmltools::tags$div("Loading dungeon heroes...")
-  ),
-  game$use_phaser(),
-  htmltools::tags$script(htmltools::HTML("
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        var loader = document.getElementById('dungeonheroes_loader');
-        if (loader) loader.style.display = 'none';
-      }, 1200);
-    });
-  "))
-)
-
-server <- function(input, output, session) {
+initialize_mushroom_swamps <- function(game, input, session) {
 
   enemy_specs <- list(
     list(name = "mushroom_man_1", type = "mushroom_man", x = 1250, y = 1550, hit_points = 5, damage = 4, motion = "walk"),
@@ -241,44 +175,11 @@ server <- function(input, output, session) {
   game$set_shiny_session()
 
   game$set_world_bounds(world_width, world_height)
+  add_realm_map(game, "mushroom_swamps")
 
-  hero <- game$add_sprite(
-    name = "hero",
-    url = "dungeonheroes-assets/sprites/hero_idle.png",
-    x = 100,
-    y = 100,
-    frame_width = 100,
-    frame_height = 100,
-    frame_count = 7,
-    frame_rate = 4
-  )
-  enable_player_movement(game, hero)
-  navigation_objects <- add_realm_navigation(game)
-  initialize_realm_navigation(input, session, game, navigation_objects)
-  hero$add_animation(
-    suffix = "move_down",
-    url = "dungeonheroes-assets/sprites/hero_move_down.png",
-    frame_width = 100, frame_height = 100,
-    frame_count = 4, frame_rate = 8
-  )
-  hero$add_animation(
-    suffix = "move_up",
-    url = "dungeonheroes-assets/sprites/hero_move_up.png",
-    frame_width = 100, frame_height = 100,
-    frame_count = 4, frame_rate = 8
-  )
-  hero$add_animation(
-    suffix = "move_left",
-    url = "dungeonheroes-assets/sprites/hero_move_left.png",
-    frame_width = 100, frame_height = 100,
-    frame_count = 4, frame_rate = 8
-  )
-  hero$add_animation(
-    suffix = "move_right",
-    url = "dungeonheroes-assets/sprites/hero_move_right.png",
-    frame_width = 100, frame_height = 100,
-    frame_count = 4, frame_rate = 8
-  )
+  hero <- add_realm_hero(game)
+  Sys.sleep(0.1)
+  game$enable_terrain_collision("hero")
   hero$add_animation(
     suffix = "attack",
     url = "dungeonheroes-assets/sprites/hero_attack.png",
@@ -483,30 +384,10 @@ server <- function(input, output, session) {
     y = 85
   )
   inventory_text$set_scroll_factor(0)
-  lapply(seq_len(health_bar_segment_count), function(segment_index) {
-    segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
-    game$add_rectangle(
-      name = sprintf("life_bar_red_%02d", segment_index),
-      x = segment_x,
-      y = 60,
-      width = health_bar_segment_width,
-      height = health_bar_segment_height,
-      color = "0xc0392b"
-    )$set_scroll_factor(0)
-  })
-  health_bar_segments <- lapply(seq_len(health_bar_segment_count), function(segment_index) {
-    segment_x <- 1200 + ((segment_index - 1) * (health_bar_segment_width + health_bar_segment_gap))
-    life_bar <- game$add_rectangle(
-      name = sprintf("life_bar_green_%02d", segment_index),
-      x = segment_x,
-      y = 60,
-      width = health_bar_segment_width,
-      height = health_bar_segment_height,
-      color = "0x2ecc71"
-    )
-    life_bar$set_scroll_factor(0)
-    life_bar
-  })
+  health_bar_segments <- add_player_health_bar(
+    game, health_bar_segment_count, segment_width = health_bar_segment_width,
+    segment_height = health_bar_segment_height, segment_gap = health_bar_segment_gap
+  )
   update_life_points()
   enemy_status_text <- game$add_text(
     text = "enemies: loading",
@@ -530,17 +411,6 @@ server <- function(input, output, session) {
     y = 660
   )
   version_text$set_scroll_factor(0)
-
-  leave_realm_button <- add_navigation_button(game, "leave_realm", "World map", 1470, 45, 180)
-  lapply(leave_realm_button, function(object) object$hide())
-
-  shiny::observeEvent(input$realm, {
-    if (identical(input$realm, "world_map")) {
-      lapply(leave_realm_button, function(object) object$hide())
-    } else {
-      lapply(leave_realm_button, function(object) object$show())
-    }
-  }, ignoreInit = TRUE)
 
   dead_tree_bottom <- game$add_static_sprite(
     name = "dead_tree_1_bottom",
@@ -727,13 +597,7 @@ server <- function(input, output, session) {
 
         if (life_points <= 0 && !game_over_shown) {
           game_over_shown <<- TRUE
-          shinyalert::shinyalert(
-            title = "Game over",
-            text = "Your life points reached 0.",
-            type = "error",
-            closeOnClickOutside = FALSE,
-            showCancelButton = FALSE
-          )
+          show_game_over()
         }
       }
     )
@@ -756,6 +620,3 @@ server <- function(input, output, session) {
 
   lapply(enemy_names, add_enemy_handlers)
 }
-
-
-shiny::shinyApp(ui, server)

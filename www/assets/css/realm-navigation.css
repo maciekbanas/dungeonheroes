@@ -1,4 +1,3 @@
 #realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; background:transparent; }
 .realm-destination { position:absolute; transform:translate(-50%,-50%); width:230px; height:64px; border:0; background:transparent; color:transparent; cursor:pointer; }
 .realm-destination:focus { outline:3px solid #fff; }
-#leave-realm { display:none; position:fixed; z-index:9500; right:40px; top:20px; width:180px; height:48px; border:0; background:transparent; cursor:pointer; }

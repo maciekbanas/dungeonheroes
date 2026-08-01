@@ -14,7 +14,6 @@ realm_navigation_ui <- function() {
       realm_destination("mushroom-swamps", "Mushroom Swamps", 31, 61),
       realm_destination("magma-hills", "Magma Hills", 72, 31)
     ),
-    htmltools::tags$button(id = "leave-realm", type = "button", `aria-label` = "Return to world map"),
     htmltools::tags$script(src = "dungeonheroes-assets/js/realm-navigation.js")
   )
 }
@@ -29,34 +28,50 @@ realm_destination <- function(id, label, left, top) {
   )
 }
 
-initialize_realm_navigation <- function(input, session, game, navigation_objects) {
-  loaded_realm_count <- 0L
 
-  shiny::observeEvent(input$realm, {
-    if (identical(input$realm, "world_map")) {
-      lapply(navigation_objects, function(object) object$show())
-      return(invisible(NULL))
-    }
+add_navigation_button <- function(game, name, label, x, y, width) {
+  background <- game$add_rectangle(
+    name = paste0(name, "_background"), x = x, y = y,
+    width = width, height = 48, color = "0x33251d"
+  )
+  label_object <- game$add_text(
+    text = label, id = paste0(name, "_label"),
+    x = x - width / 2 + 16, y = y - 12
+  )
+  lapply(list(background, label_object), function(object) {
+    object$set_scroll_factor(0)
+  })
+  list(background, label_object)
+}
 
-    loaded_realm_count <<- loaded_realm_count + 1L
-    add_realm_map(
-      game,
-      input$realm,
-      map_key = sprintf("%s_%d", input$realm, loaded_realm_count)
-    )
-    Sys.sleep(0.1)
-    game$enable_terrain_collision("hero")
-    lapply(navigation_objects, function(object) object$hide())
+add_realm_navigation <- function(game) {
+  world_map <- game$add_image(
+    name = "realm_world_map",
+    url = "dungeonheroes-assets/general/world_map.png",
+    x = 800,
+    y = 400
+  )
+  world_map$set_scroll_factor(0)
 
-    if (identical(input$realm, "mushroom_swamps")) {
-      shinyalert::shinyalert(
-        title = "Use Space to attack and interact",
-        type = "info"
-      )
-    }
-    shiny::showNotification(
-      sprintf("Entering %s", if (identical(input$realm, "magma_hills")) "Magma Hills" else "Mushroom Swamps"),
-      type = "message", duration = 2
-    )
-  }, ignoreInit = TRUE)
+  title <- game$add_text(
+    text = "The Shattered Realms", id = "realm_map_title", x = 610, y = 65
+  )
+  help <- game$add_text(
+    text = "Choose a realm to begin your journey", id = "realm_map_help", x = 610, y = 720
+  )
+  lapply(list(title, help), function(object) {
+    object$set_scroll_factor(0)
+  })
+
+  c(
+    list(world_map, title, help),
+    add_navigation_button(game, "mushroom_swamps", "Mushroom Swamps", 500, 500, 230),
+    add_navigation_button(game, "magma_hills", "Magma Hills", 1150, 260, 190)
+  )
+}
+
+
+initialize_world_map <- function(game) {
+  game$set_shiny_session()
+  add_realm_navigation(game)
 }
