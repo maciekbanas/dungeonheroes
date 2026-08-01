@@ -1,0 +1,14 @@
+#realm-map, #magma-realm { position:fixed; inset:0; z-index:9000; overflow:hidden; font-family:Georgia,serif; color:#fff; }
+#realm-map { background:#172c35 url('../general/world_map.png') center/cover no-repeat; }
+#realm-map::before { content:""; position:absolute; inset:4%; border:4px double #d7b977; box-shadow:inset 0 0 80px #000; pointer-events:none; }
+.map-title,.magma-title { position:absolute; top:7%; width:100%; text-align:center; font-size:clamp(32px,5vw,70px); text-shadow:3px 4px #15100b; letter-spacing:.08em; }
+.realm-destination { position:absolute; transform:translate(-50%,-50%); padding:15px 22px; border:2px solid #edce84; border-radius:50%; background:#251d17dd; color:#fff; cursor:pointer; box-shadow:0 0 25px #000; }
+.realm-destination:hover,.realm-destination:focus { outline:3px solid #fff; transform:translate(-50%,-50%) scale(1.08); }
+.realm-destination strong,.realm-destination span { display:block; }.realm-destination span { color:#edce84; margin-top:4px; }
+#world-hero { position:absolute; left:calc(31% - 50px); top:calc(61% - 115px); width:100px; height:100px; object-fit:none; object-position:left top; image-rendering:pixelated; }
+.map-help,.magma-help { position:absolute; bottom:6%; width:100%; text-align:center; font:20px sans-serif; text-shadow:2px 2px #000; }
+#leave-realm { display:none; position:fixed; z-index:9500; right:25px; top:25px; padding:12px 20px; border:2px solid #e7cb87; border-radius:5px; color:white; background:#33251ddd; font-weight:bold; cursor:pointer; }
+#magma-realm { display:none; background:#211713; }
+#magma-field { position:absolute; inset:0; background:#5a3526 url('../terrain/magma_hills/hill_1.png') center/200px 200px; cursor:crosshair; }
+#magma-field::before { content:""; position:absolute; left:32%; top:0; width:22%; height:100%; background:url('../terrain/magma_hills/lava_1.png') center/160px 160px; clip-path:polygon(20% 0,90% 0,65% 18%,95% 36%,55% 52%,80% 69%,25% 84%,60% 100%,0 100%,22% 81%,5% 64%,40% 48%,12% 30%,42% 14%); }
+#magma-hero { position:absolute; left:12%; top:55%; width:100px; height:100px; object-fit:none; object-position:left top; image-rendering:pixelated; transition:left .45s linear,top .45s linear; z-index:2; }

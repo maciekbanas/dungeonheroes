@@ -1,6 +1,8 @@
 library(shiny)
 library(shinyphaser)
 
+invisible(lapply(sort(list.files("R", pattern = "[.]R$", full.names = TRUE)), source))
+
 shiny::addResourcePath(
   prefix = "dungeonheroes-assets",
   directoryPath = normalizePath("www/assets", mustWork = TRUE)
@@ -16,6 +18,7 @@ shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 dungeonheroes_version <- read.dcf("DESCRIPTION", fields = "Version")[[1]]
 
 ui <- shiny::tagList(
+  realm_navigation_ui(),
   htmltools::tags$style(htmltools::HTML("
     @keyframes dungeonheroes-skeleton-loader {
       from { background-position: 0 0; }
@@ -62,6 +65,8 @@ ui <- shiny::tagList(
 )
 
 server <- function(input, output, session) {
+
+  initialize_realm_navigation(input, session)
 
   enemy_specs <- list(
     list(name = "mushroom_man_1", type = "mushroom_man", x = 1250, y = 1550, hit_points = 5, damage = 4, motion = "walk"),
@@ -129,13 +134,6 @@ server <- function(input, output, session) {
   health_bar_segment_gap <- 3
   game_over_shown <- FALSE
   defeated_enemy_count <- 0
-
-  session$onFlushed(function() {
-    shinyalert::shinyalert(
-      title = "Use Space to attack and interact",
-      type = "info"
-    )
-  }, once = TRUE)
 
   enemy_animation_key <- function(enemy_name, suffix) {
     paste(enemy_name, suffix, sep = "_")
