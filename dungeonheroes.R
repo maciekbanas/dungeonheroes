@@ -66,8 +66,6 @@ ui <- shiny::tagList(
 
 server <- function(input, output, session) {
 
-  initialize_realm_navigation(input, session)
-
   enemy_specs <- list(
     list(name = "mushroom_man_1", type = "mushroom_man", x = 1250, y = 1550, hit_points = 5, damage = 4, motion = "walk"),
     list(name = "mushroom_man_2", type = "mushroom_man", x = 850, y = 2150, hit_points = 5, damage = 4, motion = "walk"),
@@ -244,8 +242,6 @@ server <- function(input, output, session) {
 
   game$set_world_bounds(world_width, world_height)
 
-  add_realm_map(game, "mushroom_swamps")
-  add_realm_map(game, "magma_hills")
   hero <- game$add_sprite(
     name = "hero",
     url = "dungeonheroes-assets/sprites/hero_idle.png",
@@ -257,6 +253,9 @@ server <- function(input, output, session) {
     frame_rate = 4
   )
   enable_player_movement(game, hero)
+  hero$hide()
+  navigation_objects <- add_realm_navigation(game)
+  initialize_realm_navigation(input, session, game, hero, navigation_objects)
   hero$add_animation(
     suffix = "move_down",
     url = "dungeonheroes-assets/sprites/hero_move_down.png",
@@ -533,7 +532,16 @@ server <- function(input, output, session) {
   )
   version_text$set_scroll_factor(0)
 
-  add_navigation_button(game, "leave_realm", "World map", 1470, 45, 180)
+  leave_realm_button <- add_navigation_button(game, "leave_realm", "World map", 1470, 45, 180)
+  lapply(leave_realm_button, function(object) object$hide())
+
+  shiny::observeEvent(input$realm, {
+    if (identical(input$realm, "world_map")) {
+      lapply(leave_realm_button, function(object) object$hide())
+    } else {
+      lapply(leave_realm_button, function(object) object$show())
+    }
+  }, ignoreInit = TRUE)
 
   dead_tree_bottom <- game$add_static_sprite(
     name = "dead_tree_1_bottom",

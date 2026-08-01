@@ -1,10 +1,4 @@
-#realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; font-family:Georgia,serif; color:#fff; background:#172c35; }
-.world-map-art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; image-rendering:pixelated; }
-#realm-map::before { content:""; position:absolute; inset:4%; border:4px double #d7b977; box-shadow:inset 0 0 80px #000; pointer-events:none; }
-.map-title,.magma-title { position:absolute; top:7%; width:100%; text-align:center; font-size:clamp(32px,5vw,70px); text-shadow:3px 4px #15100b; letter-spacing:.08em; }
-.realm-destination { position:absolute; transform:translate(-50%,-50%); padding:15px 22px; border:2px solid #edce84; border-radius:50%; background:#251d17dd; color:#fff; cursor:pointer; box-shadow:0 0 25px #000; }
-.realm-destination:hover,.realm-destination:focus { outline:3px solid #fff; transform:translate(-50%,-50%) scale(1.08); }
-.realm-destination strong,.realm-destination span { display:block; }.realm-destination span { color:#edce84; margin-top:4px; }
-#world-hero { position:absolute; left:calc(31% - 50px); top:calc(61% - 115px); width:100px; height:100px; object-fit:none; object-position:left top; image-rendering:pixelated; }
-.map-help,.magma-help { position:absolute; bottom:6%; width:100%; text-align:center; font:20px sans-serif; text-shadow:2px 2px #000; }
+#realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; background:transparent; }
+.realm-destination { position:absolute; transform:translate(-50%,-50%); width:230px; height:64px; border:0; background:transparent; color:transparent; cursor:pointer; }
+.realm-destination:focus { outline:3px solid #fff; }
 #leave-realm { display:none; position:fixed; z-index:9500; right:40px; top:20px; width:180px; height:48px; border:0; background:transparent; cursor:pointer; }
