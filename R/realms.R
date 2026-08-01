@@ -68,7 +68,6 @@ add_navigation_button <- function(game, name, label, x, y, width) {
   )
   lapply(list(background, label_object), function(object) {
     object$set_scroll_factor(0)
-    object$set_depth(1002)
   })
   list(background, label_object)
 }
@@ -81,7 +80,6 @@ add_realm_navigation <- function(game) {
     y = 400
   )
   world_map$set_scroll_factor(0)
-  world_map$set_depth(1000)
 
   title <- game$add_text(
     text = "The Shattered Realms", id = "realm_map_title", x = 610, y = 65
@@ -91,7 +89,6 @@ add_realm_navigation <- function(game) {
   )
   lapply(list(title, help), function(object) {
     object$set_scroll_factor(0)
-    object$set_depth(1002)
   })
 
   c(
