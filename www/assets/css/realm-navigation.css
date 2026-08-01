@@ -1,3 +1,4 @@
 #realm-map { position:fixed; inset:0; z-index:9000; overflow:hidden; background:transparent; }
 .realm-destination { position:absolute; transform:translate(-50%,-50%); width:230px; height:64px; border:0; background:transparent; color:transparent; cursor:pointer; }
 .realm-destination:focus { outline:3px solid #fff; }
+.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }

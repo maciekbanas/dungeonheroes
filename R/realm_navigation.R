@@ -19,12 +19,14 @@ realm_navigation_ui <- function() {
 }
 
 realm_destination <- function(id, label, left, top) {
-  htmltools::tags$button(
+  realm_name <- gsub("-", "_", id, fixed = TRUE)
+  htmltools::tags$a(
     id = id,
     class = "realm-destination",
-    type = "button",
+    href = sprintf("?realm=%s", realm_name),
     style = sprintf("left:%s%%;top:%s%%", left, top),
-    `aria-label` = sprintf("Enter %s", label)
+    `aria-label` = sprintf("Enter %s", label),
+    htmltools::tags$span(class = "visually-hidden", label)
   )
 }
 
