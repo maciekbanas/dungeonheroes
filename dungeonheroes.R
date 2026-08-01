@@ -115,6 +115,9 @@ server <- function(input, output, session) {
   )
   enemy_attack_cooldown <- 2
   enemy_in_range <- NULL
+  sword_in_range <- FALSE
+  wizard_in_range <- FALSE
+  berry_in_range <- NULL
   has_sword <- FALSE
   hero_last_attack_time <- as.numeric(Sys.time()) - 1
   hero_attack_cooldown <- 0.75
@@ -154,7 +157,8 @@ server <- function(input, output, session) {
   mushroom_sight_range <- 500
   mushroom_approach_speed_multiplier <- 1.35
   mushroom_approach_distance_multiplier <- 2
-  mushroom_reaction_check_interval <- 250
+  # Check every frame so noticing the hero never waits on the movement timer.
+  mushroom_reaction_check_interval <- 16
   mushroom_alert_duration <- 1200
   mushroom_motion_specs <- list(
     mushroom_man_1 = list(speed = 42, distance = 70, lag = 0.0, interval = 1300),
@@ -305,6 +309,7 @@ server <- function(input, output, session) {
   )
   hero$add_player_controls()
   hero$follow_camera()
+  hero$set_depth(10)
   Sys.sleep(0.1)
   game$enable_terrain_collision("hero")
   hero$add_animation(
@@ -374,6 +379,14 @@ server <- function(input, output, session) {
     frame_width = 100, frame_height = 100,
     frame_count = 2, frame_rate = 4
   )
+  lapply(c("left", "right"), function(direction) {
+    hero$add_animation(
+      suffix = paste0("sword_attack_", direction),
+      url = sprintf("dungeonheroes-assets/sprites/hero_sword_attack_%s.png", direction),
+      frame_width = 100, frame_height = 100,
+      frame_count = 2, frame_rate = 4
+    )
+  })
 
   enemies <- stats::setNames(lapply(enemy_specs, function(spec) {
     enemy <- game$add_sprite(
@@ -402,6 +415,14 @@ server <- function(input, output, session) {
       frame_width = 100, frame_height = 100,
       frame_count = 6, frame_rate = 6
     )
+    lapply(c("left", "right"), function(direction) {
+      enemy$add_animation(
+        suffix = paste0("attack_", direction),
+        url = sprintf("dungeonheroes-assets/sprites/mushroom_man_attack_%s.png", direction),
+        frame_width = 100, frame_height = 100,
+        frame_count = 6, frame_rate = 6
+      )
+    })
     enemy$add_animation(
       suffix = "destroy",
       url = "dungeonheroes-assets/sprites/mushroom_man_destroy.png",
@@ -424,46 +445,86 @@ server <- function(input, output, session) {
       speed = motion_spec$speed * mushroom_approach_speed_multiplier,
       distance = motion_spec$distance * mushroom_approach_distance_multiplier,
       check_interval = mushroom_reaction_check_interval,
-      alert_duration = mushroom_alert_duration
+      alert_duration = mushroom_alert_duration,
+      wander_interval = motion_spec$interval
     )
-    force(enemy_name)
-    force(motion_spec)
+  })
 
-    shiny::observe({
-      shiny::invalidateLater(motion_spec$interval, session)
+  handle_space <- function(event) {
+      if (life_points <= 0) return(invisible(NULL))
 
-      if (!isTRUE(enemy_is_alive[[enemy_name]]) || identical(enemy_in_range, enemy_name)) {
-        return(NULL)
+      if (!is.null(berry_in_range) && isTRUE(berry_is_available[[berry_in_range]])) {
+        consumed_berry <- berry_in_range
+        restored_life <- min(10, max_life_points - life_points)
+        life_points <<- min(max_life_points, life_points + 10)
+        berry_is_available[[consumed_berry]] <<- FALSE
+        berry_in_range <<- NULL
+        berries[[consumed_berry]]$destroy()
+        update_life_points()
+        set_combat_status(sprintf(
+          "You ate berries and restored %d life. Life: %d/%d",
+          restored_life, life_points, max_life_points
+        ))
+        return(invisible(NULL))
       }
 
-      direction <- sample(
-        list(c(-1, 0), c(1, 0), c(0, -1), c(0, 1)),
-        1
-      )[[1]]
-      enemies[[enemy_name]]$set_in_motion_random_or_toward(
-        target_name = "hero",
-        sight_range = mushroom_sight_range,
-        dir_x = direction[1],
-        dir_y = direction[2],
-        speed = motion_spec$speed,
-        distance = motion_spec$distance,
-        approach_speed_multiplier = mushroom_approach_speed_multiplier,
-        approach_distance_multiplier = mushroom_approach_distance_multiplier,
-        lag = motion_spec$lag
-      )
-    })
-  })
+      if (sword_in_range && !has_sword) {
+        has_sword <<- TRUE
+        sword_in_range <<- FALSE
+        sword$destroy()
+        inventory_text$set("weapon: sword")
+        hero$play_animation("hero_sword")
+        set_combat_status("You picked up the sword.")
+        return(invisible(NULL))
+      }
+
+      if (wizard_in_range) {
+        shinyalert::shinyalert(
+          title = "Dear, oh dear. What are you doing here in these dark forests, lad?",
+          type = "info",
+          callbackR = function(value) shinyalert::shinyalert(
+            title = "There is a good spirit waiting to be saved!",
+            type = "info"
+          )
+        )
+        return(invisible(NULL))
+      }
+
+      now <- as.numeric(Sys.time())
+      if (now - hero_last_attack_time < hero_attack_cooldown) return(invisible(NULL))
+      hero_last_attack_time <<- now
+      hero_attack_sound$play()
+
+      if (!is.null(enemy_in_range) && isTRUE(enemy_is_alive[[enemy_in_range]])) {
+        damage <- if (has_sword) hero_sword_damage else hero_fist_damage
+        hero_animation <- if (has_sword) "hero_sword_attack" else "hero_attack"
+        enemy_hit_points[[enemy_in_range]] <<- max(0, enemy_hit_points[[enemy_in_range]] - damage)
+        play_hero_timed_animation(hero_animation)
+        set_combat_status(sprintf(
+          "You hit %s for %d. Enemy life: %d/%d",
+          format_enemy_label(enemy_in_range), damage,
+          enemy_hit_points[[enemy_in_range]], enemy_max_hit_points[[enemy_in_range]]
+        ))
+
+        if (enemy_hit_points[[enemy_in_range]] <= 0) {
+          defeated <- enemy_in_range
+          enemy_is_alive[[defeated]] <<- FALSE
+          defeated_enemy_count <<- defeated_enemy_count + 1
+          enemies[[defeated]]$play_animation(enemy_animation_key(defeated, "destroy"), duration = 750)
+          later::later(function() enemies[[defeated]]$destroy(), delay = 0.75)
+          enemy_in_range <<- NULL
+        }
+        update_enemy_status()
+      } else {
+        play_hero_timed_animation(if (has_sword) "hero_sword_attack" else "hero_attack")
+      }
+
+  }
 
   game$add_control(
     "Space",
-    action = NULL,
-    input,
-    client_action = dungeonheroes_space_client_actions(
-      hero_attack_cooldown,
-      enemy_specs,
-      hero_fist_damage,
-      hero_sword_damage
-    )
+    server_action = handle_space,
+    input = input
   )
 
   inventory_text <- game$add_text(
@@ -514,12 +575,30 @@ server <- function(input, output, session) {
   combat_status_text$set_scroll_factor(0)
   update_enemy_status()
   version_text <- game$add_text(
-    text = sprintf("dungeonheroes v%s | shinyphaser v%s", dungeonheroes_version, shinyphaser_version),
+    text = sprintf("shinyphaser v%s", shinyphaser_version),
     id = "game_version",
     x = 50,
     y = 660
   )
   version_text$set_scroll_factor(0)
+
+  dead_tree_bottom <- game$add_static_sprite(
+    name = "dead_tree_1_bottom",
+    url = "dungeonheroes-assets/terrain/ms/dead_tree_1_bottom.png",
+    x = 550,
+    y = 650
+  )
+  dead_tree_bottom$set_depth(10)
+
+  dead_tree_top <- game$add_image(
+    name = "dead_tree_1_top",
+    url = "dungeonheroes-assets/terrain/ms/dead_tree_1_top.png",
+    x = 550,
+    y = 650 - map_tile_size
+  )
+  dead_tree_top$set_depth(20)
+
+  game$add_collider("hero", "dead_tree_1_bottom")
 
   sword <- game$add_static_sprite(
     name = "sword",
@@ -527,6 +606,57 @@ server <- function(input, output, session) {
     x = 300,
     y = 300
   )
+  game$add_overlap(
+    "hero", "sword", input = input,
+    server_action = function(event) sword_in_range <<- TRUE
+  )
+  game$add_overlap_end(
+    "hero", "sword", input = input, session = session,
+    server_action = function(event) sword_in_range <<- FALSE
+  )
+
+  berry_specs <- list(
+    berries_1 = c(x = 650, y = 650),
+    berries_2 = c(x = 1450, y = 1650),
+    berries_3 = c(x = 2550, y = 2250),
+    berries_4 = c(x = 1150, y = 3150),
+    berries_5 = c(x = 2050, y = 3850),
+    berries_6 = c(x = 2850, y = 4750),
+    berries_7 = c(x = 450, y = 5450),
+    berries_8 = c(x = 1550, y = 5550),
+    berries_9 = c(x = 2450, y = 5850),
+    berries_10 = c(x = 2950, y = 6350)
+  )
+  berry_is_available <- stats::setNames(
+    rep(TRUE, length(berry_specs)),
+    names(berry_specs)
+  )
+  berries <- lapply(names(berry_specs), function(berry_name) {
+    position <- berry_specs[[berry_name]]
+    game$add_static_sprite(
+      name = berry_name,
+      url = "dungeonheroes-assets/perks/berries.png",
+      x = position[["x"]],
+      y = position[["y"]]
+    )
+  })
+  names(berries) <- names(berry_specs)
+
+  lapply(names(berries), function(berry_name) {
+    force(berry_name)
+    game$add_overlap(
+      "hero", berry_name, input = input,
+      server_action = function(event) {
+        if (isTRUE(berry_is_available[[berry_name]])) berry_in_range <<- berry_name
+      }
+    )
+    game$add_overlap_end(
+      "hero", berry_name, input = input, session = session,
+      server_action = function(event) {
+        if (identical(berry_in_range, berry_name)) berry_in_range <<- NULL
+      }
+    )
+  })
 
 
   wizard <- game$add_sprite(
@@ -568,47 +698,38 @@ server <- function(input, output, session) {
     object_one = "hero",
     object_two = "wizard",
     input = input,
-    client_action = list(
-      show_text = "talk_bubble_text",
-      sprite = "wizard",
-      play_animation = "wizard_talk",
-      duration = 2000,
-      play_sound = "wizard_laugh",
-      cooldown = 5000
-    )
+    browser_action = browser_actions({
+      talk_bubble_text$show()
+      wizard$play_animation("talk", duration = 2000)
+      wizard_laugh_sound$play()
+    }),
+    server_action = function(event) wizard_in_range <<- TRUE
   )
   game$add_overlap_end(
     object_one = "hero",
     object_two = "wizard",
     input = input,
-    client_action = list(
-      hide_text = "talk_bubble_text",
-      sprite = "wizard",
-      play_animation = "wizard_idle"
-    )
+    browser_action = browser_actions({
+      talk_bubble_text$hide()
+      wizard$play_animation("idle")
+    }),
+    server_action = function(event) wizard_in_range <<- FALSE
   )
 
   game$add_overlap(
     object_one = "hero",
     object_two = "mushroom_spirit",
     input = input,
-    client_action = list(
-      show_alert = list(
+    browser_action = browser_actions(mushroom_spirit$destroy()),
+    server_action = function(event) {
+      shinyalert::shinyalert(
         title = "Mushroom spirit saved!",
         text = "The good spirit is safe. You win!",
         type = "success",
         closeOnClickOutside = FALSE,
         showCancelButton = FALSE
-      ),
-      raw_js = paste0(
-        "const state = (window.GameBridge && GameBridge.clientState) || {};",
-        "state.dungeonheroes_game_over = true;",
-        "if (window.GameBridge && GameBridge.playerControls) delete GameBridge.playerControls.hero;",
-        "const hero = scene.children.getByName('hero');",
-        "if (hero && hero.body && typeof hero.body.stop === 'function') hero.body.stop();"
-      ),
-      disable_sprite = "mushroom_spirit"
-    )
+      )
+    }
   )
 
   add_enemy_handlers <- function(enemy_name) {
@@ -617,214 +738,63 @@ server <- function(input, output, session) {
     game$add_overlap(
       object_one = "hero",
       object_two = enemy_name,
-      callback_fun = function(evt) {
-        enemy_in_range <<- enemy_name
-      },
       input = input,
-      client_action = c(
-        list(
-          list(
-            set_state = list(
-              list(key = "hero_life", op = "init", value = max_life_points, min = 0, max = max_life_points),
-              list(key = "hero_life", op = "decrement", amount = enemy_damage[[enemy_name]], min = 0, max = max_life_points)
-            ),
-            set_text = list(
-              id = "combat_status",
-              text = sprintf("%s hits you for %d. Life: {state.hero_life}/%d", format_enemy_label(enemy_name), enemy_damage[[enemy_name]], max_life_points)
-            ),
-            raw_js = sprintf(
-              "const enemy = scene.children.getByName('%s'); if (enemy) { scene.tweens.killTweensOf(enemy); if (enemy.body && typeof enemy.body.stop === 'function') enemy.body.stop(); }",
-              enemy_name
-            ),
-            sprite = enemy_name,
-            play_animation = enemy_animation_key(enemy_name, "attack"),
-            duration = 1000,
-            cooldown = enemy_attack_cooldown * 1000
+      browser_action = browser_actions({
+        enemies[[enemy_name]]$stop_motion()
+        enemies[[enemy_name]]$play_animation(
+          enemy_animation_key(enemy_name, "attack"),
+          duration = enemy_attack_cooldown * 1000
+        )
+      }),
+      mode = "stay",
+      interval = enemy_attack_cooldown * 1000,
+      server_action = function(event) {
+        enemy_in_range <<- enemy_name
+        now <- as.numeric(Sys.time())
+        if (life_points <= 0 || !isTRUE(enemy_is_alive[[enemy_name]]) ||
+            now - enemy_last_attack_time[[enemy_name]] < enemy_attack_cooldown) {
+          return(invisible(NULL))
+        }
+
+        enemy_last_attack_time[[enemy_name]] <<- now
+        life_points <<- max(0, life_points - enemy_damage[[enemy_name]])
+        set_combat_status(sprintf(
+          "%s hits you for %d. Life: %d/%d",
+          format_enemy_label(enemy_name), enemy_damage[[enemy_name]],
+          life_points, max_life_points
+        ))
+        update_life_points()
+
+        if (life_points <= 0 && !game_over_shown) {
+          game_over_shown <<- TRUE
+          shinyalert::shinyalert(
+            title = "Game over",
+            text = "Your life points reached 0.",
+            type = "error",
+            closeOnClickOutside = FALSE,
+            showCancelButton = FALSE
           )
-        ),
-        dungeonheroes_life_bar_client_actions(max_life_points, health_bar_segment_count),
-        list(dungeonheroes_game_over_client_action(enemy_name))
-      )
+        }
+      }
     )
 
     game$add_overlap_end(
       object_one = "hero",
       object_two = enemy_name,
-      callback_fun = function(evt) {
-        if (identical(enemy_in_range, enemy_name)) {
-          enemy_in_range <<- NULL
-        }
-        if (isTRUE(enemy_is_alive[[enemy_name]])) {
-          enemies[[enemy_name]]$play_animation(enemy_animation_key(enemy_name, "idle"))
-        }
-      },
-      input = input
+      # Release the forced attack without leaving a permanent forced-idle state.
+      browser_action = browser_actions(enemies[[enemy_name]]$play_animation(
+        enemy_animation_key(enemy_name, "idle"),
+        duration = 1
+      )),
+      input = input,
+      session = session,
+      server_action = function(event) {
+        if (identical(enemy_in_range, enemy_name)) enemy_in_range <<- NULL
+      }
     )
   }
 
   lapply(enemy_names, add_enemy_handlers)
-}
-
-
-dungeonheroes_life_bar_client_actions <- function(max_life_points, health_bar_segment_count) {
-  lapply(seq_len(health_bar_segment_count), function(segment_index) {
-    threshold <- (segment_index - 1) * max_life_points / health_bar_segment_count
-    list(
-      hide_when_state = list(
-        id = sprintf("life_bar_green_%02d", segment_index),
-        key = "hero_life",
-        op = "lte",
-        value = threshold
-      )
-    )
-  })
-}
-
-dungeonheroes_game_over_client_action <- function(enemy_name) {
-  list(
-    when_state = list(key = "hero_life", op = "lte", value = 0),
-    set_text = list(
-      id = "combat_status",
-      text = sprintf("%s defeated you. Game over.", gsub("_", " ", enemy_name))
-    ),
-    raw_js = paste0(
-      "const state = (window.GameBridge && GameBridge.clientState) || {};",
-      "if (!state.dungeonheroes_game_over) {",
-      "state.dungeonheroes_game_over = true;",
-      "if (window.GameBridge && GameBridge.playerControls) delete GameBridge.playerControls.hero;",
-      "const hero = scene.children.getByName('hero');",
-      "if (hero && hero.body && typeof hero.body.stop === 'function') hero.body.stop();",
-      "if (typeof swal === 'function') swal({ title: 'Game over', text: 'Your life points reached 0.', type: 'error', closeOnClickOutside: false, showCancelButton: false });",
-      "}"
-    )
-  )
-}
-
-
-dungeonheroes_space_client_actions <- function(hero_attack_cooldown, enemy_specs, hero_fist_damage, hero_sword_damage) {
-  enemy_names <- vapply(enemy_specs, `[[`, character(1), "name")
-  enemy_max_hit_points <- stats::setNames(
-    vapply(enemy_specs, `[[`, numeric(1), "hit_points"),
-    enemy_names
-  )
-
-  enemy_hit_feedback <- unlist(lapply(enemy_names, function(enemy_name) {
-    enemy_label <- gsub("_", " ", enemy_name)
-    enemy_state_key <- paste0("enemy_life_", enemy_name)
-    enemy_max_life <- enemy_max_hit_points[[enemy_name]]
-    enemy_destroy_js <- sprintf(
-      paste0(
-        "const state = (window.GameBridge && GameBridge.clientState) || {};",
-        "const enemy = scene.children.getByName(%s);",
-        "if (state[%s] <= 0 && enemy && !enemy.getData('destroying')) {",
-        "enemy.setData('destroying', true);",
-        "scene.tweens.killTweensOf(enemy);",
-        "if (enemy.body) { enemy.body.enable = false; if (typeof enemy.body.stop === 'function') enemy.body.stop(); }",
-        "if (scene.anims.exists(%s)) enemy.play(%s, true);",
-        "setTimeout(function() { disableSprite(%s); }, 750);",
-        "}"
-      ),
-      jsonlite::toJSON(enemy_name, auto_unbox = TRUE),
-      jsonlite::toJSON(enemy_state_key, auto_unbox = TRUE),
-      jsonlite::toJSON(paste0(enemy_name, "_destroy"), auto_unbox = TRUE),
-      jsonlite::toJSON(paste0(enemy_name, "_destroy"), auto_unbox = TRUE),
-      jsonlite::toJSON(enemy_name, auto_unbox = TRUE)
-    )
-
-    list(
-      list(
-        set_state = list(
-          list(key = enemy_state_key, op = "init", value = enemy_max_life, min = 0, max = enemy_max_life),
-          list(key = enemy_state_key, op = "decrement", amount = hero_fist_damage, min = 0, max = enemy_max_life)
-        ),
-        set_text = list(
-          id = "combat_status",
-          text = sprintf("You punch %s for %d. Enemy life: {state.%s}/%d", enemy_label, hero_fist_damage, enemy_state_key, enemy_max_life)
-        ),
-        when_overlap = c("hero", enemy_name),
-        when_exists = list(
-          enemy_name,
-          list(name = "sword", exists = TRUE)
-        ),
-        raw_js = enemy_destroy_js
-      ),
-      list(
-        set_state = list(
-          list(key = enemy_state_key, op = "init", value = enemy_max_life, min = 0, max = enemy_max_life),
-          list(key = enemy_state_key, op = "decrement", amount = hero_sword_damage, min = 0, max = enemy_max_life)
-        ),
-        set_text = list(
-          id = "combat_status",
-          text = sprintf("You slash %s for %d. Enemy life: {state.%s}/%d", enemy_label, hero_sword_damage, enemy_state_key, enemy_max_life)
-        ),
-        when_overlap = c("hero", enemy_name),
-        when_exists = list(
-          enemy_name,
-          list(name = "sword", exists = FALSE)
-        ),
-        raw_js = enemy_destroy_js
-      )
-    )
-  }), recursive = FALSE)
-
-  c(
-    list(
-      list(
-        destroy_sprite = "sword",
-        set_text = list(id = "inventory_weapon", text = "weapon: sword"),
-        sprite = "hero",
-        play_animation = "hero_sword",
-        when_overlap = c("hero", "sword"),
-        when_exists = "sword",
-        stop_after_match = TRUE
-      ),
-      list(
-        show_alert = list(
-          title = "Dear, oh dear. What are you doing here in these dark forests, lad?",
-          text = "",
-          type = "info"
-        ),
-        raw_js = paste0(
-          "setTimeout(function() { ",
-          "if (typeof swal !== 'function') return; ",
-          "if (!document.getElementById('mushroom-spirit-alert-style')) { ",
-          "var style = document.createElement('style'); ",
-          "style.id = 'mushroom-spirit-alert-style'; ",
-          "style.textContent = '@keyframes mushroomSpiritAlert { from { background-position: 0 0; } to { background-position: -448px 0; } } .mushroom-spirit-alert-animation { width: 32px; height: 32px; margin: 0 auto; background-image: url(\"dungeonheroes-assets/sprites/mushroom_spirit.png\"); background-repeat: no-repeat; animation: mushroomSpiritAlert 1s steps(14) infinite; image-rendering: pixelated; }'; ",
-          "document.head.appendChild(style); ",
-          "} ",
-          "swal({ ",
-          "title: 'There is a good spirit waiting to be saved!', ",
-          "text: '<div class=\"mushroom-spirit-alert-animation\"></div>', ",
-          "html: true ",
-          "}); ",
-          "}, 2200);"
-        ),
-        when_overlap = c("hero", "wizard"),
-        cooldown = 1000,
-        stop_after_match = TRUE
-      )
-    ),
-    enemy_hit_feedback,
-    list(
-      list(
-        play_sound = "hero_attack",
-        sprite = "hero",
-        play_animation = "hero_attack",
-        duration = 500,
-        cooldown = hero_attack_cooldown * 1000,
-        when_exists = list(name = "sword", exists = TRUE)
-      ),
-      list(
-        play_sound = "hero_attack",
-        sprite = "hero",
-        play_animation = "hero_sword_attack",
-        duration = 500,
-        cooldown = hero_attack_cooldown * 1000,
-        when_exists = list(name = "sword", exists = FALSE)
-      )
-    )
-  )
 }
 
 
