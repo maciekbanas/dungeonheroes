@@ -66,8 +66,6 @@ if (!dir.exists(app_dir) || !dir.exists(assets_dir)) {
   stop("The application or its assets are missing from the project.", call. = FALSE)
 }
 
-# The Shiny app lives in a subdirectory, while its large asset library is kept
-# at the project root. Register the URL prefix used throughout the game before
-# Shiny evaluates app.R.
-shiny::addResourcePath("dungeonheroes-assets", assets_dir)
-shiny::runApp(app_dir, launch.browser = interactive())
+# Run the root app entry point used by deployments. It registers assets before
+# loading the game implementation from app_dir.
+shiny::runApp(project_dir, launch.browser = interactive())

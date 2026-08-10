@@ -30,3 +30,11 @@ The entry point only establishes shared game state and loads focused modules:
 Modules are sourced into the active Shiny server invocation in the order listed
 in `app.R`; this lets callbacks share session state without turning the example
 back into one large file.
+
+## Deploying to shinyapps.io
+
+Deploy the root `app.R` (or select the project root) rather than
+`dungeonheroes/app.R`. The root entry point ensures that both the game code in
+`dungeonheroes/` and the static files in `www/assets/` are included in the
+rsconnect bundle, then exposes the files at the `dungeonheroes-assets` URL
+prefix used by the game.
