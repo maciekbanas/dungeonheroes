@@ -1,5 +1,11 @@
 library(shinyphaser)
 
+# The root deployment entry point supplies app_dir. When this subdirectory is
+# run directly, Shiny makes it the working directory.
+if (!exists("app_dir", inherits = FALSE)) {
+  app_dir <- getwd()
+}
+
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
 map_tile_width <- 32
@@ -10,7 +16,7 @@ shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 # Each module is evaluated in the app or server environment so the example stays
 # easy to read while retaining the shared state expected by its Shiny callbacks.
-source("ui.R", local = TRUE)
+sys.source(file.path(app_dir, "ui.R"), envir = environment())
 
 server <- function(input, output, session) {
   server_env <- environment()
@@ -32,7 +38,7 @@ server <- function(input, output, session) {
   )
   # These files intentionally live outside an R/ directory. Shiny automatically
   # sources R/ before it evaluates app.R, when `game` does not exist yet.
-  for (module in file.path("modules", modules)) {
+  for (module in file.path(app_dir, "modules", modules)) {
     sys.source(module, envir = server_env)
   }
 }

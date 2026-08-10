@@ -1,20 +1,12 @@
-# Run the complete Dungeon Heroes application from R with:
+# Run the complete Dungeon Heroes application locally from R with:
 #
-#   source("dungeonheroes.R")
+#   shiny::runApp(source("dungeonheroes.R")$value)
 #
-# `Rscript dungeonheroes.R` is also supported. Find this file from either
-# Rscript's arguments or source()'s evaluation frame. The working-directory
-# fallback also supports selecting and running the whole file in an R editor.
+# The file is also a Shiny application entry point, so it can be supplied as
+# `appPrimaryDoc` when the project root is deployed with rsconnect. Find this
+# file from source()'s evaluation frame first: a hosted Shiny process can have
+# its own --file argument which must not be mistaken for this application.
 launcher_path <- function() {
-  script_argument <- grep(
-    "^--file=", commandArgs(trailingOnly = FALSE), value = TRUE
-  )
-  if (length(script_argument) > 0L) {
-    return(normalizePath(
-      sub("^--file=", "", script_argument[[1L]]), mustWork = TRUE
-    ))
-  }
-
   frames <- sys.frames()
   for (frame in rev(frames)) {
     if (!is.null(frame$ofile)) {
@@ -26,6 +18,17 @@ launcher_path <- function() {
         return(path)
       }
     }
+  }
+
+  script_argument <- sub(
+    "^--file=", "",
+    grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
+  )
+  script_argument <- script_argument[
+    basename(script_argument) == "dungeonheroes.R"
+  ]
+  if (length(script_argument) > 0L) {
+    return(normalizePath(script_argument[[1L]], mustWork = TRUE))
   }
 
   path <- file.path(getwd(), "dungeonheroes.R")
@@ -66,8 +69,14 @@ if (!dir.exists(app_dir) || !dir.exists(assets_dir)) {
   stop("The application or its assets are missing from the project.", call. = FALSE)
 }
 
-# The Shiny app lives in a subdirectory, while its large asset library is kept
-# at the project root. Register the URL prefix used throughout the game before
-# Shiny evaluates app.R.
+# The Shiny app lives in a subdirectory, while its asset library is kept at the
+# project root. Register the URL prefix used throughout the game before Shiny
+# evaluates app.R.
 shiny::addResourcePath("dungeonheroes-assets", assets_dir)
-shiny::runApp(app_dir, launch.browser = interactive())
+
+# Return the application object rather than starting another Shiny process.
+# This is the contract expected by shinyapps.io (and by runApp() for a single
+# R-file app). `app_dir` remains available to app.R so its delayed server
+# callbacks can resolve module paths without relying on the process working
+# directory.
+sys.source(file.path(app_dir, "app.R"), envir = environment())
