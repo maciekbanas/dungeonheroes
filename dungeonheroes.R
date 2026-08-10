@@ -1,16 +1,48 @@
-# Run the complete Dungeon Heroes application with:
+# Run the complete Dungeon Heroes application from R with:
 #
-#   Rscript dungeonheroes.R
+#   source("dungeonheroes.R")
 #
-# Resolve paths from this file rather than from the caller's working directory,
-# so the same command also works when it is invoked from somewhere else.
-script_argument <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
-if (length(script_argument) == 0L) {
-  stop("Run this launcher with `Rscript dungeonheroes.R`.", call. = FALSE)
+# `Rscript dungeonheroes.R` is also supported. Find this file from either
+# Rscript's arguments or source()'s evaluation frame. The working-directory
+# fallback also supports selecting and running the whole file in an R editor.
+launcher_path <- function() {
+  script_argument <- grep(
+    "^--file=", commandArgs(trailingOnly = FALSE), value = TRUE
+  )
+  if (length(script_argument) > 0L) {
+    return(normalizePath(
+      sub("^--file=", "", script_argument[[1L]]), mustWork = TRUE
+    ))
+  }
+
+  frames <- sys.frames()
+  for (frame in rev(frames)) {
+    if (!is.null(frame$ofile)) {
+      path <- tryCatch(
+        normalizePath(frame$ofile, mustWork = TRUE),
+        error = function(...) NULL
+      )
+      if (!is.null(path) && basename(path) == "dungeonheroes.R") {
+        return(path)
+      }
+    }
+  }
+
+  path <- file.path(getwd(), "dungeonheroes.R")
+  if (file.exists(path)) {
+    return(normalizePath(path, mustWork = TRUE))
+  }
+
+  stop(
+    paste(
+      "Could not locate dungeonheroes.R.",
+      "Use source() with its path or run the file from the project directory."
+    ),
+    call. = FALSE
+  )
 }
 
-script_path <- sub("^--file=", "", script_argument[[1L]])
-project_dir <- dirname(normalizePath(script_path, mustWork = TRUE))
+project_dir <- dirname(launcher_path())
 app_dir <- file.path(project_dir, "dungeonheroes")
 assets_dir <- file.path(project_dir, "www", "assets")
 
