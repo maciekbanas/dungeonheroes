@@ -2,10 +2,8 @@
 #
 #   shiny::runApp(source("dungeonheroes.R")$value)
 #
-# The file is also a Shiny application entry point, so it can be supplied as
-# `appPrimaryDoc` when the project root is deployed with rsconnect. Find this
-# file from source()'s evaluation frame first: a hosted Shiny process can have
-# its own --file argument which must not be mistaken for this application.
+# Deploy the project root to shinyapps.io; app.R is its standard Shiny entry
+# point. This file remains as a backwards-compatible local launcher.
 launcher_path <- function() {
   frames <- sys.frames()
   for (frame in rev(frames)) {
@@ -46,37 +44,4 @@ launcher_path <- function() {
 }
 
 project_dir <- dirname(launcher_path())
-app_dir <- file.path(project_dir, "dungeonheroes")
-assets_dir <- file.path(project_dir, "www", "assets")
-
-required_packages <- c("later", "shiny", "shinyalert", "shinyphaser")
-missing_packages <- required_packages[
-  !vapply(required_packages, requireNamespace, logical(1L), quietly = TRUE)
-]
-
-if (length(missing_packages) > 0L) {
-  stop(
-    sprintf(
-      "Install the required package%s before starting Dungeon Heroes: %s",
-      if (length(missing_packages) == 1L) "" else "s",
-      paste(missing_packages, collapse = ", ")
-    ),
-    call. = FALSE
-  )
-}
-
-if (!dir.exists(app_dir) || !dir.exists(assets_dir)) {
-  stop("The application or its assets are missing from the project.", call. = FALSE)
-}
-
-# The Shiny app lives in a subdirectory, while its asset library is kept at the
-# project root. Register the URL prefix used throughout the game before Shiny
-# evaluates app.R.
-shiny::addResourcePath("dungeonheroes-assets", assets_dir)
-
-# Return the application object rather than starting another Shiny process.
-# This is the contract expected by shinyapps.io (and by runApp() for a single
-# R-file app). `app_dir` remains available to app.R so its delayed server
-# callbacks can resolve module paths without relying on the process working
-# directory.
-sys.source(file.path(app_dir, "app.R"), envir = environment())
+sys.source(file.path(project_dir, "app.R"), envir = environment())
