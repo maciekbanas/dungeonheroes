@@ -16,17 +16,12 @@ if (length(missing_packages) > 0L) {
 
 library(shinyphaser)
 
-# shinyapps.io starts app.R with the bundle root as its working directory. The
-# legacy dungeonheroes.R launcher supplies project_dir explicitly so it also
-# works when sourced from another directory.
-if (!exists("project_dir", inherits = FALSE)) {
-  project_dir <- getwd()
-}
-
-game_dir <- file.path(project_dir, "dungeonheroes")
+# Shiny starts app.R with the application directory as its working directory.
+project_dir <- getwd()
+code_dir <- file.path(project_dir, "code")
 assets_dir <- file.path(project_dir, "www", "assets")
 
-if (!dir.exists(game_dir) || !dir.exists(assets_dir)) {
+if (!dir.exists(code_dir) || !dir.exists(assets_dir)) {
   stop("The application or its assets are missing from the project.", call. = FALSE)
 }
 
@@ -42,7 +37,7 @@ shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 # Each module is evaluated in the app or server environment so the example stays
 # easy to read while retaining the shared state expected by its Shiny callbacks.
-sys.source(file.path(game_dir, "ui.R"), envir = environment())
+sys.source(file.path(code_dir, "ui.R"), envir = environment())
 
 server <- function(input, output, session) {
   server_env <- environment()
@@ -63,7 +58,7 @@ server <- function(input, output, session) {
     "realm_routes.R"
   )
 
-  for (module in file.path(game_dir, "modules", modules)) {
+  for (module in file.path(code_dir, "modules", modules)) {
     sys.source(module, envir = server_env)
   }
 }
