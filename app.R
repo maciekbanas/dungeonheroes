@@ -1,4 +1,31 @@
+required_packages <- c("later", "shiny", "shinyalert", "shinyphaser")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1L), quietly = TRUE)
+]
+
+if (length(missing_packages) > 0L) {
+  stop(
+    sprintf(
+      "Install the required package%s before starting Dungeon Heroes: %s",
+      if (length(missing_packages) == 1L) "" else "s",
+      paste(missing_packages, collapse = ", ")
+    ),
+    call. = FALSE
+  )
+}
+
 library(shinyphaser)
+
+# Shiny starts app.R with the application directory as its working directory.
+project_dir <- getwd()
+code_dir <- file.path(project_dir, "code")
+assets_dir <- file.path(project_dir, "www", "assets")
+
+if (!dir.exists(code_dir) || !dir.exists(assets_dir)) {
+  stop("The application or its assets are missing from the project.", call. = FALSE)
+}
+
+shiny::addResourcePath("dungeonheroes-assets", assets_dir)
 
 game <- PhaserGame$new(width = 1600, height = 800)
 map_tile_size <- 100
@@ -10,7 +37,7 @@ shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
 
 # Each module is evaluated in the app or server environment so the example stays
 # easy to read while retaining the shared state expected by its Shiny callbacks.
-source("ui.R", local = TRUE)
+sys.source(file.path(code_dir, "ui.R"), envir = environment())
 
 server <- function(input, output, session) {
   server_env <- environment()
@@ -30,9 +57,8 @@ server <- function(input, output, session) {
     file.path("realms", "castle.R"),
     "realm_routes.R"
   )
-  # These files intentionally live outside an R/ directory. Shiny automatically
-  # sources R/ before it evaluates app.R, when `game` does not exist yet.
-  for (module in file.path("modules", modules)) {
+
+  for (module in file.path(code_dir, "modules", modules)) {
     sys.source(module, envir = server_env)
   }
 }
