@@ -123,22 +123,6 @@
     bush_6_10 = c(asset = "bush_6", x = 2550, y = 2650),
     bush_6_11 = c(asset = "bush_6", x = 1950, y = 6150),
     bush_6_12 = c(asset = "bush_6", x = 550, y = 1350),
-    big_tree_5_1 = c(asset = "big_tree_5", x = 2950, y = 4150),
-    big_tree_5_2 = c(asset = "big_tree_5", x = 950, y = 2850),
-    big_tree_5_3 = c(asset = "big_tree_5", x = 1850, y = 1250),
-    big_tree_5_4 = c(asset = "big_tree_5", x = 1250, y = 4750),
-    big_tree_5_5 = c(asset = "big_tree_5", x = 2150, y = 3150),
-    big_tree_5_6 = c(asset = "big_tree_5", x = 3050, y = 1550),
-    big_tree_5_7 = c(asset = "big_tree_5", x = 2450, y = 5050),
-    big_tree_5_8 = c(asset = "big_tree_5", x = 450, y = 3750),
-    big_tree_5_9 = c(asset = "big_tree_5", x = 1350, y = 2150),
-    big_tree_5_10 = c(asset = "big_tree_5", x = 750, y = 5650),
-    big_tree_5_11 = c(asset = "big_tree_5", x = 2250, y = 550),
-    big_tree_5_12 = c(asset = "big_tree_5", x = 2550, y = 2450),
-    big_tree_5_13 = c(asset = "big_tree_5", x = 1950, y = 5950),
-    big_tree_5_14 = c(asset = "big_tree_5", x = 550, y = 1150),
-    big_tree_5_15 = c(asset = "big_tree_5", x = 2850, y = 4350),
-    big_tree_5_16 = c(asset = "big_tree_5", x = 850, y = 3050),
     small_tree_1_1 = c(asset = "small_tree_1", x = 2150, y = 3050),
     small_tree_1_2 = c(asset = "small_tree_1", x = 3050, y = 1450),
     small_tree_1_3 = c(asset = "small_tree_1", x = 2450, y = 4950),
@@ -183,7 +167,7 @@
     is_tree <- grepl("tree_", spec[["asset"]], fixed = TRUE)
     is_big_tree <- startsWith(spec[["asset"]], "big_tree_")
     is_tall_tree <- spec[["asset"]] %in% c(
-      "big_tree_1", "big_tree_4", "big_tree_5"
+      "big_tree_1", "big_tree_4"
     )
     collision_y_offset <- if (is_tall_tree) {
       175

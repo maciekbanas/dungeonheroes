@@ -9,5 +9,6 @@
   castle_map_image$click(function(event) select_realm("castle"), input)
   wild_forests_map_image$click(function(event) select_realm("wild_forests"), input)
   mushroom_swamps_map_image$click(function(event) select_realm("mushroom_swamps"), input)
+  ancient_ruins_map_image$click(function(event) select_realm("ancient_ruins"), input)
   grey_mountains_map_image$click(function(event) select_realm("grey_mountains"), input)
   magma_hills_map_image$click(function(event) select_realm("magma_hills"), input)

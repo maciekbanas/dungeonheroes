@@ -102,7 +102,7 @@
       now <- as.numeric(Sys.time())
       if (now - hero_last_attack_time < hero_attack_cooldown) return(invisible(NULL))
       hero_last_attack_time <<- now
-      hero_attack_sound$play()
+      play_hero_attack_sound()
 
       if (!is.null(enemy_in_range) && isTRUE(enemy_is_alive[[enemy_in_range]])) {
         hit_enemy <- enemy_in_range
@@ -212,24 +212,6 @@
     y = 660
   )
   version_text$set_scroll_factor(0)
-
-  dead_tree_bottom <- game$add_static_sprite(
-    name = "dead_tree_1_bottom",
-    url = "dungeonheroes-assets/terrain/mushroom_swamps/dead_tree_1_bottom.png",
-    x = 550,
-    y = 650
-  )
-  dead_tree_bottom$set_depth(10)
-
-  dead_tree_top <- game$add_image(
-    name = "dead_tree_1_top",
-    url = "dungeonheroes-assets/terrain/mushroom_swamps/dead_tree_1_top.png",
-    x = 550,
-    y = 650 - map_tile_size
-  )
-  dead_tree_top$set_depth(20)
-
-  game$add_collider("hero", "dead_tree_1_bottom")
 
   berry_specs <- list(
     berries_1 = c(x = 650, y = 650),
@@ -424,6 +406,5 @@
 
   mushroom_swamps_objects <- c(
     enemy_names,
-    "dead_tree_1_bottom", "dead_tree_1_top", names(berries),
-    "wizard", "mushroom_spirit"
+    names(berries), "wizard", "mushroom_spirit"
   )

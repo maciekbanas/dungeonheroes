@@ -20,6 +20,11 @@
     url = "dungeonheroes-assets/terrain/mushroom_swamps/mushroom_swamps_map.png",
     x = 500, y = 200, visible = FALSE, clickable = TRUE
   )
+  ancient_ruins_map_image <- game$add_image(
+    name = "choose_ancient_ruins",
+    url = "dungeonheroes-assets/terrain/ancient_ruins/ancient_ruins_map.png",
+    x = 600, y = 200, visible = FALSE, clickable = TRUE
+  )
   wild_forests_map_image <- game$add_image(
     name = "choose_wild_forests",
     url = "dungeonheroes-assets/terrain/wild_forests/wild_forests_map.png",
@@ -37,6 +42,7 @@
   )
   navigation_images <- list(
     castle_map_image, wild_forests_map_image, mushroom_swamps_map_image,
+    ancient_ruins_map_image,
     grey_mountains_map_image, magma_hills_map_image
   )
   map_navigation_background$set_scroll_factor(0)
