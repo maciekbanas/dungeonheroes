@@ -1,4 +1,4 @@
-required_packages <- c("later", "shiny", "shinyalert", "shinyphaser")
+required_packages <- c("later", "shiny", "shinyalert", "shinyphaser", "yaml")
 missing_packages <- required_packages[
   !vapply(required_packages, requireNamespace, logical(1L), quietly = TRUE)
 ]
@@ -14,8 +14,6 @@ if (length(missing_packages) > 0L) {
   )
 }
 
-library(shinyphaser)
-
 # Shiny starts app.R with the application directory as its working directory.
 project_dir <- getwd()
 code_dir <- file.path(project_dir, "code")
@@ -25,6 +23,13 @@ if (!dir.exists(code_dir) || !dir.exists(assets_dir)) {
   stop("The application or its assets are missing from the project.", call. = FALSE)
 }
 
+sys.source(file.path(code_dir, "utils.R"), envir = environment())
+installed_shinyphaser_version <- check_shinyphaser_version(
+  file.path(project_dir, "shinyphaser.yml")
+)
+
+library(shinyphaser)
+
 shiny::addResourcePath("dungeonheroes-assets", assets_dir)
 
 game <- PhaserGame$new(width = 1600, height = 800)
@@ -33,7 +38,7 @@ map_tile_width <- 32
 map_tile_height <- 64
 world_width <- map_tile_width * map_tile_size
 world_height <- map_tile_height * map_tile_size
-shinyphaser_version <- as.character(utils::packageVersion("shinyphaser"))
+shinyphaser_version <- installed_shinyphaser_version
 
 # Each module is evaluated in the app or server environment so the example stays
 # easy to read while retaining the shared state expected by its Shiny callbacks.
