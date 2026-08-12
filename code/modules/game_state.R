@@ -31,6 +31,18 @@
     name = "hero_attack",
     url = "dungeonheroes-assets/sounds/attack.wav"
   )
+  orc_attack_sound <- game$add_sound(
+    name = "orc_attack",
+    url = "dungeonheroes-assets/sounds/orc_attack.wav"
+  )
+
+  play_hero_attack_sound <- function() {
+    if (identical(selected_character, "hero_orc")) {
+      orc_attack_sound$play()
+    } else {
+      hero_attack_sound$play()
+    }
+  }
 
   max_life_points <- 100
   life_points <- max_life_points

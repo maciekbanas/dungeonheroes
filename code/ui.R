@@ -152,6 +152,11 @@ ui <- shiny::tagList(
       top: 200px;
     }
 
+    #realm_character_marker.ancient_ruins {
+      left: 600px;
+      top: 200px;
+    }
+
     #realm_character_marker.magma_hills {
       left: 400px;
       top: 300px;
@@ -345,6 +350,7 @@ ui <- shiny::tagList(
         castle: {name: 'Castle', x: 300, y: 200},
         wild_forests: {name: 'Wild Forests', x: 400, y: 200},
         mushroom_swamps: {name: 'Mushroom Swamps', x: 500, y: 200},
+        ancient_ruins: {name: 'Ancient Ruins', x: 600, y: 200},
         grey_mountains: {name: 'Grey Mountains', x: 300, y: 300},
         magma_hills: {name: 'Magma Hills', x: 400, y: 300}
       };

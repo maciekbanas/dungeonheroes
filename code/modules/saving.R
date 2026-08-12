@@ -76,7 +76,7 @@
       session$sendCustomMessage("phaser", list(js = "setNavigationOverlayVisible(true);"))
     } else {
       hide_map_navigation()
-      persistent_objects <- c("dead_tree_1_bottom", "dead_tree_1_top", "wizard", "mushroom_spirit")
+      persistent_objects <- c("wizard", "mushroom_spirit")
       available_objects <- c(enemy_names[enemy_is_alive], names(berries)[berry_is_available], persistent_objects)
       unavailable_objects <- c(enemy_names[!enemy_is_alive], names(berries)[!berry_is_available])
       visible <- if (identical(current_realm, "mushroom_swamps")) {
