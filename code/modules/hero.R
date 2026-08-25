@@ -130,13 +130,13 @@
     suffix = "sword_attack",
     url = "dungeonheroes-assets/sprites/hero/human/hero_sword_attack.png",
     frame_width = 100, frame_height = 100,
-    frame_count = 2, frame_rate = 4
+    frame_count = 3, frame_rate = 4
   )
   lapply(c("left", "right"), function(direction) {
     hero$add_animation(
       suffix = paste0("sword_attack_", direction),
       url = sprintf("dungeonheroes-assets/sprites/hero/human/hero_sword_attack_%s.png", direction),
       frame_width = 100, frame_height = 100,
-      frame_count = 2, frame_rate = 4
+      frame_count = 3, frame_rate = 4
     )
   })
