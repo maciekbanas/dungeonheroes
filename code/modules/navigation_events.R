@@ -18,7 +18,7 @@
       list(js = sprintf(
         paste0(
           "document.getElementById('realm_character_marker').classList.remove(",
-          "'castle','mushroom_swamps','wild_forests','grey_mountains','magma_hills');",
+          "'castle','mushroom_swamps','ancient_ruins','wild_forests','grey_mountains','magma_hills');",
           "document.getElementById('realm_character_marker').classList.add(%s);"
         ),
         jsonlite::toJSON(realm, auto_unbox = TRUE)
@@ -37,7 +37,7 @@
 
   shiny::observeEvent(input$navigation_realm_selected, {
     realm <- as.character(input$navigation_realm_selected$realm)
-    if (realm %in% c("castle", "wild_forests", "mushroom_swamps", "grey_mountains", "magma_hills")) {
+    if (realm %in% c("castle", "wild_forests", "mushroom_swamps", "ancient_ruins", "grey_mountains", "magma_hills")) {
       select_realm(realm)
     }
   }, ignoreInit = TRUE)
